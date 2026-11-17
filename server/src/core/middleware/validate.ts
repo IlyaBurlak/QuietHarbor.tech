@@ -12,7 +12,8 @@ export const validate =
     if (!result.success) {
       const fields: Record<string, string> = {};
       for (const issue of result.error.issues) {
-        fields[issue.path.join('.') || '_'] = issue.message;
+        const key = issue.path.join('.') || '_';
+        fields[key] ??= issue.message; // первая ошибка поля — самая важная
       }
       return next(new HttpError(400, 'VALIDATION_ERROR', 'Проверьте введённые данные', fields));
     }
