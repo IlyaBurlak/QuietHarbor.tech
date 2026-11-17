@@ -26,7 +26,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "build": "npm run build --workspaces --if-present"
+    "build": "npm run build --workspaces --if-present",
+    "reset-link": "npm run reset-link -w server --"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
@@ -38,5 +39,8 @@
     "typescript": "^5.6.0",
     "typescript-eslint": "^8.0.0"
   },
-  "type": "module"
+  "type": "module",
+  "overrides": {
+    "esbuild": "0.28.2"
+  }
 }
