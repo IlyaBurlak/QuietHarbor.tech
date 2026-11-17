@@ -1,0 +1,50 @@
+{
+  "name": "server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file=../.env src/index.ts",
+    "build": "tsup",
+    "start": "node dist/index.js",
+    "typecheck": "tsc -p .",
+    "test": "vitest run --passWithNoTests",
+    "db:migrate": "dotenv -e ../.env -- prisma migrate dev",
+    "db:deploy": "dotenv -e ../.env -- prisma migrate deploy",
+    "db:seed": "tsx --env-file=../.env prisma/seed.ts",
+    "db:studio": "dotenv -e ../.env -- prisma studio",
+    "create-admin": "tsx --env-file=../.env src/scripts/create-admin.ts",
+    "db:generate": "prisma generate",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.0.0",
+    "@wishlist/shared": "*",
+    "argon2": "^0.41.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "express": "^5.0.0",
+    "express-rate-limit": "^7.0.0",
+    "helmet": "^8.0.0",
+    "multer": "^2.0.0",
+    "pino": "^9.0.0",
+    "pino-http": "^10.0.0",
+    "sharp": "^0.34.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.0",
+    "@types/cors": "^2.8.0",
+    "@types/express": "^5.0.0",
+    "@types/multer": "^1.4.0",
+    "@types/node": "^22.0.0",
+    "@types/supertest": "^6.0.0",
+    "pino-pretty": "^13.0.0",
+    "prisma": "^6.0.0",
+    "supertest": "^7.0.0",
+    "tsup": "^8.0.0",
+    "tsx": "^4.0.0",
+    "vitest": "^3.0.0",
+    "dotenv-cli": "^8.0.0"
+  }
+}
