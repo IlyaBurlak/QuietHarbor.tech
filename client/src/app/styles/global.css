@@ -1,0 +1,355 @@
+:root {
+  --color-bg: #f7f5f1;
+  --color-surface: #ffffff;
+  --color-border: #e3dfd8;
+  --color-primary: #1f5f7a;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Страница занимает весь экран и сама не прокручивается: скролл только внутри области контента */
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background: var(--color-bg);
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.auth-shell {
+  height: 100dvh;
+  padding: 24px 16px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  animation: fade-in 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.auth-shell > * {
+  width: 100%;
+  margin: auto; /* центрирует, а при нехватке места даёт прокрутку без обрезания верха */
+}
+.auth-brand {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+.auth-steps {
+  padding-left: 20px;
+  line-height: 2;
+}
+.auth-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 24px;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.pw-strength {
+  margin-bottom: 28px;
+}
+.pw-strength__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.pw-strength__label {
+  font-weight: 600;
+  transition: color 200ms ease-out;
+}
+.pw-strength__count {
+  color: #5b6469;
+}
+.pw-strength__bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+.pw-strength__seg {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--color-border);
+  transition: background-color 200ms ease-out;
+}
+.pw-strength__list {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: #5b6469;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+}
+@media (max-width: 575px) {
+  .pw-strength__list {
+    grid-template-columns: 1fr;
+  }
+}
+.pw-strength__list li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  transition: color 150ms ease-out;
+}
+.pw-strength__list li > .anticon {
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+.pw-strength__list li.is-ok {
+  color: #2e7d4f;
+}
+
+/* Отступы подсказок и ошибок в формах: Ant Design оставляет их слишком тесными */
+.auth-card .ant-form-item {
+  margin-bottom: 24px;
+}
+.auth-card .ant-form-item-with-help {
+  margin-bottom: 24px !important;
+}
+.auth-card .ant-form-item-explain {
+  padding-top: 6px;
+  line-height: 22px;
+}
+.auth-card .ant-form-item-extra {
+  padding-top: 6px;
+  line-height: 22px;
+}
+.auth-card .ant-form-item-explain + .ant-form-item-extra {
+  padding-top: 2px;
+}
+.field-ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #2e7d4f;
+}
+.auth-card .ant-btn-primary[type='submit'] {
+  margin-top: 8px;
+}
+.auth-card .ant-form-item.pw-item,
+.auth-card .ant-form-item-with-help.pw-item {
+  margin-bottom: 14px !important;
+}
+
+.status-icon {
+  display: inline-block;
+  min-width: 18px;
+  font-size: 18px;
+  color: #5b6469;
+  animation: status-pop 150ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.status-icon--ok {
+  color: #2e7d4f;
+}
+.status-icon--bad {
+  color: #b3261e;
+}
+.field-hint {
+  font-size: 14px;
+}
+.field-hint--available {
+  color: #2e7d4f;
+}
+.field-hint--bad {
+  color: #b3261e;
+}
+.field-hint--checking {
+  color: #5b6469;
+}
+@keyframes status-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.page-narrow {
+  max-width: 960px;
+  margin: 0 auto;
+}
+.profile-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.switch-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+.danger-card {
+  border-color: #b3261e;
+}
+.danger-card .ant-card-head {
+  color: #b3261e;
+}
+.code-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  margin: 8px 0 20px;
+  padding: 16px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+.code-block code {
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  user-select: all;
+}
+.status-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.status-message__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  font-size: 22px;
+  color: #fff;
+}
+.status-message__icon--success {
+  background: #2e7d4f;
+}
+.status-message__icon--warning {
+  background: #8a5a00;
+}
+.status-message__title {
+  margin: 16px 0 8px;
+  font-size: 20px;
+  font-weight: 600;
+}
+.status-message__text {
+  margin: 0 0 20px;
+  max-width: 34ch;
+  color: #5b6469;
+  line-height: 1.5;
+}
+.status-message .ant-btn,
+.status-message a .ant-btn {
+  width: 100%;
+}
+.status-message__link {
+  margin-top: 16px;
+}
+
+/* Каркас приложения: шапка сверху, контент прокручивается внутри */
+.app-shell {
+  height: 100dvh;
+  overflow: hidden;
+}
+.app-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 24px;
+}
+@media (max-width: 767px) {
+  .app-content {
+    padding: 16px;
+  }
+}
+
+/* На невысоких экранах (ноутбук, телефон в альбомной) формы плотнее */
+@media (max-height: 820px) {
+  .auth-card {
+    padding: 20px;
+  }
+  .auth-card .ant-form-item,
+  .auth-card .ant-form-item-with-help {
+    margin-bottom: 16px !important;
+  }
+  .pw-strength {
+    margin-bottom: 18px;
+  }
+  .pw-strength__list {
+    margin-top: 10px;
+    gap: 6px 16px;
+  }
+}
+.status-message > a:not(.status-message__link):not(.ant-btn) {
+  display: block;
+  width: 100%;
+}
+
+/* Когда внутри карточки показан результат со своим заголовком, общий заголовок скрываем визуально */
+.auth-card:has(.status-message) > h1 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
