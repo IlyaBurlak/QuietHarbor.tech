@@ -13,6 +13,7 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
 ![Prisma](https://img.shields.io/badge/Prisma-6-2D3748?logo=prisma&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+![License: MIT](https://img.shields.io/badge/license-MIT-green)
 ![Status](https://img.shields.io/badge/status-MVP%20in%20development-orange)
 
 [Документация фронтенда](client/README.md) ·
@@ -107,33 +108,6 @@ npm run db:studio        # просмотр базы в браузере
 
 Команды прод-стека (`prod:*`) появятся в эпике 9.
 
-## Документация
-
-| Документ | О чём | Статус |
-| --- | --- | --- |
-| [Фронтенд](client/README.md) | устройство клиента, FSD, компоненты, работа с API | 🚧 заполняется |
-| [Бэкенд](server/README.md) | модули, эндпоинты, модель данных, права | 🚧 заполняется |
-| [План MVP](docs/MVP-plan.md) | задачи по эпикам, модель данных, порядок работ | ✅ |
-| [Дизайн и UX](docs/DESIGN.md) | палитра, адаптив, макеты экранов, анимации, футер | ✅ |
-| [CLAUDE.md](CLAUDE.md) | правила проекта для ИИ-ассистента | ✅ |
-
-## Дорожная карта
-
-Работа идёт в пять этапов: фундамент → вишлисты и товары → шаринг и бронь → друзья и Санта → админка, качество, релиз. Подробности и сроки — в [плане MVP](docs/MVP-plan.md#порядок-работ).
-
-После релиза рассматриваются: автоподстановка данных по ссылке, каталог товаров, расширение для браузера, уведомления и напоминания о датах.
-
-## Участие в разработке
-
-1. Выберите задачу из [плана MVP](docs/MVP-plan.md) и создайте ветку `feature/<номер-задачи>-<кратко>`.
-2. Следуйте архитектуре: [FSD на фронте](client/CLAUDE.md), [модули на бэке](server/CLAUDE.md).
-3. Перед пул-реквестом: `npm run lint && npm run typecheck && npm test`.
-4. В названии коммита — номер задачи, например `2.1: регистрация`.
-
-## Автор
-
-Разработка и поддержка: **@Ilya_Burlak**.
-
 ## Лицензия
 
-Лицензия пока не выбрана.
+Проект распространяется по лицензии [MIT](LICENSE).

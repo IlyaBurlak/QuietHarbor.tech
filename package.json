@@ -2,6 +2,8 @@
   "name": "quietharbor-wishlist",
   "private": true,
   "version": "0.1.0",
+  "license": "MIT",
+  "author": "Ilya Burlak (@Ilya_Burlak)",
   "workspaces": [
     "shared",
     "server",
