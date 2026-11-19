@@ -4,6 +4,7 @@ import { requireAuth } from '../../core/middleware/auth';
 import { authLimiter } from '../../core/middleware/rate-limits';
 import { validate } from '../../core/middleware/validate';
 import { SESSION_COOKIE } from '../auth/session.service';
+import { uploadSingle } from '../files/upload';
 import * as usersService from './users.service';
 
 export const usersRouter = Router();
@@ -15,6 +16,14 @@ usersRouter.get('/me', async (req, res) => {
 
 usersRouter.patch('/me', validate(updateProfileSchema), async (req, res) => {
   res.json(await usersService.updateProfile(req.user!.id, req.body));
+});
+
+usersRouter.post('/me/avatar', uploadSingle, async (req, res) => {
+  res.json(await usersService.setAvatar(req.user!.id, req.file));
+});
+
+usersRouter.delete('/me/avatar', async (req, res) => {
+  res.json(await usersService.removeAvatar(req.user!.id));
 });
 
 usersRouter.post('/me/password', authLimiter, validate(changePasswordSchema), async (req, res) => {

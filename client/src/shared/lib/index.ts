@@ -8,3 +8,4 @@ export {
   INCOMPLETE_MESSAGE,
   type BirthDateCheck,
 } from './birth-date';
+export { fileUrl } from './file-url';

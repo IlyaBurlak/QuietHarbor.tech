@@ -11,6 +11,7 @@ export const creds = {
 
 export async function cleanDb() {
   await prisma.passwordResetRequest.deleteMany();
+  await prisma.friendship.deleteMany();
   await prisma.group.deleteMany();
   await prisma.session.deleteMany();
   await prisma.user.deleteMany();

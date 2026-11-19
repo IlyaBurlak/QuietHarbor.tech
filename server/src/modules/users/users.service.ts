@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import type { ChangePasswordInput, DeleteAccountInput, UpdateProfileInput } from '@wishlist/shared';
 import { prisma } from '../../core/db/prisma';
 import { HttpError, forbidden } from '../../core/http/errors';
+import { deleteFile, saveImage } from '../files/files.service';
 import { destroyUserSessions } from '../auth/session.service';
 import { toProfile, toSessionUser, usernameChangeAvailableAt } from './user.dto';
 
@@ -52,6 +53,32 @@ export async function updateProfile(userId: string, input: UpdateProfileInput) {
   }
 }
 
+const AVATAR_SIZE = 512;
+
+export async function setAvatar(userId: string, file: Express.Multer.File | undefined) {
+  if (!file) {
+    throw new HttpError(400, 'FILE_REQUIRED', 'Выберите файл', { file: 'Выберите файл' });
+  }
+  const key = await saveImage(file.buffer, { size: AVATAR_SIZE, square: true });
+  const previous = (await getUser(userId)).avatarKey;
+  let updated;
+  try {
+    updated = await prisma.user.update({ where: { id: userId }, data: { avatarKey: key } });
+  } catch (e) {
+    await deleteFile(key);
+    throw e;
+  }
+  await deleteFile(previous);
+  return { user: toSessionUser(updated), profile: toProfile(updated) };
+}
+
+export async function removeAvatar(userId: string) {
+  const previous = (await getUser(userId)).avatarKey;
+  const updated = await prisma.user.update({ where: { id: userId }, data: { avatarKey: null } });
+  await deleteFile(previous);
+  return { user: toSessionUser(updated), profile: toProfile(updated) };
+}
+
 /** Неверный пароль — 400, а не 401: 401 означает «сессия недействительна» и выбросил бы пользователя. */
 async function assertPassword(passwordHash: string, password: string | undefined, field: string) {
   if (!password || !(await argon2.verify(passwordHash, password))) {
@@ -89,9 +116,10 @@ export async function deleteAccount(userId: string, input: DeleteAccountInput) {
     );
   }
 
-  // TODO(эпик 4): удалять файлы аватара и фото товаров вместе с записями
   await prisma.$transaction([
     prisma.group.deleteMany({ where: { ownerId: userId } }),
     prisma.user.delete({ where: { id: userId } }),
   ]);
+  // TODO(эпик 4): так же удалять фото товаров
+  await deleteFile(user.avatarKey);
 }

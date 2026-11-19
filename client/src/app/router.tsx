@@ -5,6 +5,7 @@ import { LoginPage } from '@/pages/login';
 import { RegisterPage } from '@/pages/register';
 import { ForgotPasswordPage } from '@/pages/forgot-password';
 import { ResetPasswordPage } from '@/pages/reset-password';
+import { CalendarPage } from '@/pages/calendar';
 import { ProfilePage } from '@/pages/profile';
 import { SettingsPage } from '@/pages/settings';
 import { NotFoundPage } from '@/pages/not-found';
@@ -23,6 +24,7 @@ export function AppRouter() {
         <Route element={<RequireAuth />}>
           <Route element={<AppLayout />}>
             <Route index element={<HomePage />} />
+            <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>

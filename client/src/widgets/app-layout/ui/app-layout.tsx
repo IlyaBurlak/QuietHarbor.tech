@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { Link, Outlet } from 'react-router-dom';
-import { Avatar, Button, Drawer, Dropdown, Grid, Layout, Menu } from 'antd';
-import { MenuOutlined, UserOutlined } from '@ant-design/icons';
-import { useCurrentUser } from '@/entities/user';
+import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Button, Drawer, Dropdown, Grid, Layout, Menu } from 'antd';
+import { MenuOutlined } from '@ant-design/icons';
+import { UserAvatar, useCurrentUser } from '@/entities/user';
 import { useLogout } from '@/features/auth-logout';
 
-const items = [{ key: '/', label: <Link to="/">Главная</Link> }];
+const items = [
+  { key: '/', label: <Link to="/">Главная</Link> },
+  { key: '/calendar', label: <Link to="/calendar">Календарь</Link> },
+];
 
 export function AppLayout() {
   const screens = Grid.useBreakpoint();
@@ -13,6 +16,8 @@ export function AppLayout() {
   const mobile = !screens.md;
   const { data: user } = useCurrentUser();
   const logout = useLogout();
+  const { pathname } = useLocation();
+  const selected = [pathname];
 
   return (
     <Layout className="app-shell">
@@ -36,7 +41,14 @@ export function AppLayout() {
         <Link to="/" style={{ fontWeight: 600, fontSize: 20 }}>
           Wishlist
         </Link>
-        {!mobile && <Menu mode="horizontal" items={items} style={{ flex: 1, borderBottom: 0 }} />}
+        {!mobile && (
+          <Menu
+            mode="horizontal"
+            items={items}
+            selectedKeys={selected}
+            style={{ flex: 1, borderBottom: 0 }}
+          />
+        )}
         <div style={{ marginLeft: 'auto' }}>
           <Dropdown
             trigger={['click']}
@@ -50,14 +62,18 @@ export function AppLayout() {
             }}
           >
             <Button type="text" aria-label="Меню аккаунта">
-              <Avatar size="small" icon={<UserOutlined />} />
+              <UserAvatar
+                fullName={user?.fullName ?? ''}
+                avatarKey={user?.avatarKey ?? null}
+                size="small"
+              />
               {!mobile && <span style={{ marginLeft: 8 }}>{user?.username ?? user?.fullName}</span>}
             </Button>
           </Dropdown>
         </div>
       </Layout.Header>
       <Drawer open={open} onClose={() => setOpen(false)} placement="left" title="Меню">
-        <Menu mode="inline" items={items} onClick={() => setOpen(false)} />
+        <Menu mode="inline" items={items} selectedKeys={selected} onClick={() => setOpen(false)} />
       </Drawer>
       <Layout.Content className="app-content">
         <Outlet />

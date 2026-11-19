@@ -353,3 +353,58 @@ body {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
 }
+
+.page-wide {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.avatar-editor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.avatar-editor__preview {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.birthday-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.birthday-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+}
+.birthday-row + .birthday-row {
+  border-top: 1px solid var(--color-border);
+}
+.birthday-row__main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.birthday-row__sub {
+  font-size: 13px;
+}
+.birthday-row__when {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  white-space: nowrap;
+}
+.birthday-row__when .ant-tag {
+  margin: 0;
+}
+.calendar-group {
+  margin-top: 24px;
+}

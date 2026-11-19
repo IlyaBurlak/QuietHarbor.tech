@@ -1,5 +1,6 @@
-import { Avatar, Card, Col, Row, Skeleton, Result, Button, Typography } from 'antd';
+import { Card, Col, Row, Skeleton, Result, Button, Typography } from 'antd';
 import { useProfile } from '@/entities/user';
+import { AvatarEditor } from '@/features/edit-avatar';
 import { ProfileForm } from '@/features/edit-profile';
 
 export function ProfilePage() {
@@ -16,7 +17,6 @@ export function ProfilePage() {
     );
   }
 
-  const initials = `${profile.firstName[0] ?? ''}${profile.lastName[0] ?? ''}`.toUpperCase();
   const since = new Date(profile.createdAt).toLocaleDateString('ru-RU', {
     month: 'long',
     year: 'numeric',
@@ -31,9 +31,7 @@ export function ProfilePage() {
         <Col xs={24} md={8}>
           <Card>
             <div className="profile-summary">
-              <Avatar size={96} style={{ background: '#1F5F7A' }}>
-                {initials || '?'}
-              </Avatar>
+              <AvatarEditor profile={profile} />
               <Typography.Title level={2} style={{ fontSize: 20, margin: '12px 0 0' }}>
                 {profile.firstName} {profile.lastName}
               </Typography.Title>
