@@ -1,7 +1,8 @@
-import { Button, Card, Col, Empty, Row, Skeleton, Typography } from 'antd';
+import { Button, Card, Skeleton } from 'antd';
 import { Link } from 'react-router-dom';
 import { BirthdayRow, useBirthdays } from '@/entities/birthday';
 import { useCurrentUser, useProfile } from '@/entities/user';
+import { EmptyState, PageHeader } from '@/shared/ui';
 
 function greeting(hour: number) {
   if (hour < 6) return 'Доброй ночи';
@@ -19,53 +20,48 @@ export function HomePage() {
   const name = profile?.firstName ?? user?.fullName ?? '';
 
   return (
-    <div className="page-wide">
-      <Typography.Title level={1} style={{ fontSize: 28 }}>
-        {greeting(new Date().getHours())}
-        {name ? `, ${name}` : ''}
-      </Typography.Title>
+    <>
+      <PageHeader
+        title={`${greeting(new Date().getHours())}${name ? `, ${name}` : ''}`}
+        description="Ваши желания, друзья и ближайшие праздники в одном месте."
+      />
 
-      <Row gutter={[24, 24]}>
-        <Col xs={24} lg={16}>
-          <Card title="Мои вишлисты" style={{ marginBottom: 24 }}>
-            {/* Подключается в эпике 3: список карточек и кнопка «Создать первый» */}
-            <Empty description="У вас пока нет вишлистов" />
+      <div className="home-grid">
+        <div className="home-grid__main">
+          <Card title="Мои вишлисты">
+            {/* Подключается в эпике 3: карточки вишлистов и кнопка «Создать первый» */}
+            <EmptyState text="У вас пока нет вишлистов" />
           </Card>
           <Card title="Мои группы Тайного Санты">
             {/* Подключается в эпике 7 */}
-            <Empty description="Вы пока не участвуете в группах" />
+            <EmptyState text="Вы пока не участвуете в играх" />
           </Card>
-        </Col>
-        <Col xs={24} lg={8}>
-          <Card
-            title="Ближайшие даты"
-            extra={
-              birthdays.data && birthdays.data.length > 0 ? <Link to="/calendar">Все</Link> : null
-            }
-            styles={{ body: { padding: '4px 16px' } }}
-          >
-            {birthdays.isPending && <Skeleton active paragraph={{ rows: 3 }} title={false} />}
-            {birthdays.isError && (
-              <div style={{ padding: '12px 0' }}>
-                <Typography.Paragraph type="secondary">
-                  Не удалось загрузить даты
-                </Typography.Paragraph>
-                <Button onClick={() => void birthdays.refetch()}>Повторить</Button>
-              </div>
-            )}
-            {birthdays.data &&
-              (birthdays.data.length === 0 ? (
-                <Empty description="Дней рождения друзей пока нет" style={{ padding: '16px 0' }} />
-              ) : (
-                <ul className="birthday-list">
-                  {birthdays.data.slice(0, UPCOMING_LIMIT).map((entry) => (
-                    <BirthdayRow key={entry.userId} entry={entry} />
-                  ))}
-                </ul>
-              ))}
-          </Card>
-        </Col>
-      </Row>
-    </div>
+        </div>
+        <Card
+          title="Ближайшие даты"
+          extra={
+            birthdays.data && birthdays.data.length > 0 ? <Link to="/calendar">Все</Link> : null
+          }
+          styles={{ body: { padding: '0 24px 8px' } }}
+        >
+          {birthdays.isPending && <Skeleton active paragraph={{ rows: 3 }} title={false} />}
+          {birthdays.isError && (
+            <EmptyState text="Не удалось загрузить даты">
+              <Button onClick={() => void birthdays.refetch()}>Повторить</Button>
+            </EmptyState>
+          )}
+          {birthdays.data &&
+            (birthdays.data.length === 0 ? (
+              <EmptyState text="Дней рождения друзей пока нет" />
+            ) : (
+              <ul className="birthday-list">
+                {birthdays.data.slice(0, UPCOMING_LIMIT).map((entry) => (
+                  <BirthdayRow key={entry.userId} entry={entry} />
+                ))}
+              </ul>
+            ))}
+        </Card>
+      </div>
+    </>
   );
 }

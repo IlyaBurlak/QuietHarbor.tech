@@ -1,6 +1,6 @@
 import confetti from 'canvas-confetti';
 
-const COLORS = ['#1F5F7A', '#B5651D', '#2E7D4F', '#E3B04B', '#7FB3C8'];
+const COLORS = ['#3f3fe8', '#ff8a3d', '#3ddc84', '#ff5a5f', '#a78bfa'];
 
 /** Конфетти из двух нижних углов экрана. Пропускается при prefers-reduced-motion. */
 export function celebrate() {

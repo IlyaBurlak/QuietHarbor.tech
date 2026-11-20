@@ -1,18 +1,18 @@
-import { Button, Card, Empty, Result, Skeleton, Typography } from 'antd';
+import { Button, Card, Result, Skeleton } from 'antd';
 import { Link } from 'react-router-dom';
 import { BirthdayRow, groupByMonth, useBirthdays } from '@/entities/birthday';
+import { EmptyState, PageHeader } from '@/shared/ui';
 
 export function CalendarPage() {
   const { data, isPending, isError, refetch } = useBirthdays();
 
   return (
-    <div className="page-narrow">
-      <Typography.Title level={1} style={{ fontSize: 28 }}>
-        Календарь
-      </Typography.Title>
-      <Typography.Paragraph type="secondary">
-        Дни рождения друзей. Ближайшие — сверху. Друзья, которые скрыли дату, здесь не показываются.
-      </Typography.Paragraph>
+    <>
+      <PageHeader
+        title="Календарь"
+        count={data?.length || undefined}
+        description="Дни рождения друзей, ближайшие сверху. Друзья, скрывшие дату, здесь не показываются."
+      />
 
       {isPending && <Skeleton active paragraph={{ rows: 6 }} />}
       {isError && (
@@ -23,29 +23,19 @@ export function CalendarPage() {
         />
       )}
       {data && data.length === 0 && (
-        <Card>
-          <Empty
-            description={
-              <>
-                Пока нет дней рождения для показа.
-                <br />
-                Они появятся, когда вы добавите друзей, а они укажут дату в профиле.
-              </>
-            }
-          >
-            <Link to="/profile">
-              <Button>Указать свою дату в профиле</Button>
-            </Link>
-          </Empty>
-        </Card>
+        <EmptyState text="Пока нет дней рождения для показа. Они появятся, когда вы добавите друзей, а они укажут дату в профиле.">
+          <Link to="/profile">
+            <Button>Указать свою дату</Button>
+          </Link>
+        </EmptyState>
       )}
       {data &&
         groupByMonth(data).map((group) => (
           <section key={group.key} aria-labelledby={`m-${group.key}`} className="calendar-group">
-            <Typography.Title level={2} id={`m-${group.key}`} style={{ fontSize: 18 }}>
+            <h2 id={`m-${group.key}`} className="section-title">
               {group.title}
-            </Typography.Title>
-            <Card styles={{ body: { padding: '4px 16px' } }}>
+            </h2>
+            <Card styles={{ body: { padding: '0 24px' } }}>
               <ul className="birthday-list">
                 {group.items.map((entry) => (
                   <BirthdayRow key={entry.userId} entry={entry} />
@@ -54,6 +44,6 @@ export function CalendarPage() {
             </Card>
           </section>
         ))}
-    </div>
+    </>
   );
 }

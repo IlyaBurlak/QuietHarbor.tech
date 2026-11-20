@@ -1,7 +1,7 @@
 import { CheckCircleFilled, MinusCircleOutlined } from '@ant-design/icons';
 import { evaluatePassword } from './evaluate-password';
 
-const LEVEL_COLORS = ['#E3DFD8', '#B3261E', '#8A5A00', '#2E7D4F', '#1F5F7A'];
+const LEVEL_COLORS = ['rgba(255,255,255,0.16)', '#ff6b61', '#ffb74d', '#3ddc84', '#7aa2ff'];
 
 /** Шкала надёжности и список условий; обновляется при каждом символе. */
 export function PasswordStrength({ password }: { password: string }) {

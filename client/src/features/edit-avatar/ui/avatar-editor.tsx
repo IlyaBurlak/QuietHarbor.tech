@@ -15,7 +15,7 @@ import { toApiError } from '@/shared/api';
 const MAX_BYTES = 5 * 1024 * 1024;
 const TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
-export function AvatarEditor({ profile }: { profile: Profile }) {
+export function AvatarEditor({ profile, size = 96 }: { profile: Profile; size?: number }) {
   const { message } = App.useApp();
   const qc = useQueryClient();
   const setUser = useSetCurrentUser();
@@ -65,9 +65,9 @@ export function AvatarEditor({ profile }: { profile: Profile }) {
   return (
     <div className="avatar-editor">
       {preview ? (
-        <img className="avatar-editor__preview" src={preview} alt="" width={96} height={96} />
+        <img className="avatar-editor__preview" src={preview} alt="" width={size} height={size} />
       ) : (
-        <UserAvatar fullName={fullName} avatarKey={profile.avatarKey} size={96} />
+        <UserAvatar fullName={fullName} avatarKey={profile.avatarKey} size={size} />
       )}
       <input
         ref={input}

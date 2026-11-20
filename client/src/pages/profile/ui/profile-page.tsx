@@ -1,7 +1,16 @@
-import { Card, Col, Row, Skeleton, Result, Button, Typography } from 'antd';
+import { Button, Card, Result, Skeleton } from 'antd';
+import { Cake, CalendarClock } from 'lucide-react';
 import { useProfile } from '@/entities/user';
 import { AvatarEditor } from '@/features/edit-avatar';
 import { ProfileForm } from '@/features/edit-profile';
+
+const formatBirthday = (iso: string, hideYear: boolean) =>
+  new Date(`${iso}T00:00:00Z`).toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    year: hideYear ? undefined : 'numeric',
+    timeZone: 'UTC',
+  });
 
 export function ProfilePage() {
   const { data: profile, isPending, isError, refetch } = useProfile();
@@ -18,36 +27,49 @@ export function ProfilePage() {
   }
 
   const since = new Date(profile.createdAt).toLocaleDateString('ru-RU', {
+    day: 'numeric',
     month: 'long',
     year: 'numeric',
   });
 
   return (
-    <div className="page-narrow">
-      <Typography.Title level={1} style={{ fontSize: 28 }}>
-        Профиль
-      </Typography.Title>
-      <Row gutter={[24, 24]}>
-        <Col xs={24} md={8}>
-          <Card>
-            <div className="profile-summary">
-              <AvatarEditor profile={profile} />
-              <Typography.Title level={2} style={{ fontSize: 20, margin: '12px 0 0' }}>
-                {profile.firstName} {profile.lastName}
-              </Typography.Title>
-              <Typography.Text type="secondary">@{profile.username}</Typography.Text>
-              <Typography.Text type="secondary" style={{ display: 'block', marginTop: 8 }}>
-                С нами с {since}
-              </Typography.Text>
-            </div>
-          </Card>
-        </Col>
-        <Col xs={24} md={16}>
-          <Card>
-            <ProfileForm profile={profile} />
-          </Card>
-        </Col>
-      </Row>
+    <div className="page-split">
+      <aside className="page-split__aside">
+        <Card>
+          <section className="profile-hero" aria-labelledby="profile-name">
+            <AvatarEditor profile={profile} size={160} />
+            <h1 id="profile-name" className="profile-hero__name">
+              {profile.firstName} {profile.lastName}
+            </h1>
+            <ul className="chips">
+              {profile.username && <li className="chip">@{profile.username}</li>}
+              {profile.birthDate ? (
+                <li className="chip">
+                  <Cake size={16} aria-hidden />
+                  {formatBirthday(profile.birthDate, profile.hideBirthYear)}
+                </li>
+              ) : (
+                <li>
+                  <button
+                    type="button"
+                    className="chip chip--action"
+                    onClick={() => document.getElementById('birth-date')?.focus()}
+                  >
+                    <Cake size={16} aria-hidden />
+                    Добавить день рождения
+                  </button>
+                </li>
+              )}
+              <li className="chip">
+                <CalendarClock size={16} aria-hidden />С нами с {since}
+              </li>
+            </ul>
+          </section>
+        </Card>
+      </aside>
+      <Card title="Данные профиля">
+        <ProfileForm profile={profile} />
+      </Card>
     </div>
   );
 }

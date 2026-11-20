@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
-import { Col, Grid, Row, Typography } from 'antd';
 import { Link } from 'react-router-dom';
+import { Anchor } from 'lucide-react';
+import { APP_NAME } from '@/shared/config';
 
 const steps = [
   'Создайте список желаний',
@@ -8,43 +9,41 @@ const steps = [
   'Друзья бронируют подарки втайне от вас',
 ];
 
-/** Двухколоночный каркас страниц входа и регистрации: описание слева, форма справа. */
-export function AuthShell({ title, children }: { title: string; children: ReactNode }) {
-  const screens = Grid.useBreakpoint();
-  const wide = !!screens.md;
+function Brand() {
+  return (
+    <Link to="/" className="brand" aria-label={`${APP_NAME}, на главную`}>
+      <Anchor size={28} strokeWidth={2.4} aria-hidden />
+      <span className="brand__name">{APP_NAME}</span>
+    </Link>
+  );
+}
 
+/** Каркас входа и регистрации: слева карточка с обещанием, справа тёмная панель с формой. */
+export function AuthShell({ title, children }: { title: string; children: ReactNode }) {
   return (
     <main className="auth-shell">
-      <Row
-        gutter={[{ xs: 0, md: 48 }, 24]}
-        align="middle"
-        justify="center"
-        style={{ maxWidth: 960, margin: '0 auto' }}
-      >
-        <Col xs={24} md={12}>
-          <Link to="/" className="auth-brand">
-            Wishlist
-          </Link>
-          <Typography.Paragraph type="secondary" style={{ marginTop: 8 }}>
-            Списки желаний и Тайный Санта для друзей и семьи.
-          </Typography.Paragraph>
-          {wide && (
+      <div className="auth-modal">
+        <aside className="auth-art">
+          <Brand />
+          <div className="auth-art__bottom">
+            <p className="auth-art__tagline">Желания сбываются, когда о них знают друзья</p>
             <ol className="auth-steps">
               {steps.map((s) => (
                 <li key={s}>{s}</li>
               ))}
             </ol>
-          )}
-        </Col>
-        <Col xs={24} md={12}>
-          <section className="auth-card" aria-labelledby="auth-title">
-            <Typography.Title level={1} id="auth-title" style={{ fontSize: 24, marginTop: 0 }}>
-              {title}
-            </Typography.Title>
-            {children}
-          </section>
-        </Col>
-      </Row>
+          </div>
+        </aside>
+        <section className="auth-card" aria-labelledby="auth-title">
+          <div className="auth-card__brand">
+            <Brand />
+          </div>
+          <h1 id="auth-title" className="auth-card__title">
+            {title}
+          </h1>
+          {children}
+        </section>
+      </div>
     </main>
   );
 }
