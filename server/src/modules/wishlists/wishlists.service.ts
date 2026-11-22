@@ -6,14 +6,16 @@ import { forbidden, HttpError, notFound } from '../../core/http/errors';
 import { canViewWishlist } from './wishlists.access';
 import { toItemDto, toWishlistDto } from './wishlists.dto';
 
+export const ITEM_INCLUDE = { images: true, links: true } as const;
+
 /** Длинный случайный ключ (144 бита): не подбирается. */
 export const generateShareSlug = () => randomBytes(18).toString('base64url');
 
 const toDate = (v: string | null | undefined) => (v ? new Date(`${v}T00:00:00.000Z`) : null);
 
 /** Порядок товаров по режиму сортировки; цены без значения — в конце. */
-function sortItems(items: Item[], mode: WishlistSort): Item[] {
-  const byPosition = (a: Item, b: Item) =>
+export function sortItems<T extends Item>(items: T[], mode: WishlistSort): T[] {
+  const byPosition = (a: T, b: T) =>
     a.position - b.position || a.createdAt.getTime() - b.createdAt.getTime();
   if (mode === 'priority') {
     return [...items].sort((a, b) => b.priority - a.priority || byPosition(a, b));
@@ -65,7 +67,10 @@ export async function createWishlist(userId: string, input: CreateWishlistInput)
 }
 
 export async function getWishlist(userId: string, id: string) {
-  const w = await prisma.wishlist.findUnique({ where: { id }, include: { items: true } });
+  const w = await prisma.wishlist.findUnique({
+    where: { id },
+    include: { items: { include: ITEM_INCLUDE } },
+  });
   if (!w || !(await canViewWishlist(userId, w))) throw notFound('Вишлист не найден');
   const items = sortItems(w.items, w.sortMode).map(toItemDto);
   return { wishlist: toWishlistDto(w, items.length), items };
@@ -184,6 +189,7 @@ export async function copyItem(userId: string, targetId: string, itemId: string)
       position: (last._max.position ?? -1) + 1,
       links: { create: src.links.map((l) => ({ url: l.url, label: l.label })) },
     },
+    include: ITEM_INCLUDE,
   });
   return toItemDto(item);
 }

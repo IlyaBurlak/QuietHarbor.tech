@@ -51,16 +51,33 @@ export const wishlistDtoSchema = z.object({
 });
 export type WishlistDto = z.infer<typeof wishlistDtoSchema>;
 
+export const itemImageDtoSchema = z.object({
+  id: z.string(),
+  fileKey: z.string(),
+  isMain: z.boolean(),
+});
+export type ItemImageDto = z.infer<typeof itemImageDtoSchema>;
+
+export const itemLinkDtoSchema = z.object({
+  id: z.string(),
+  url: z.string(),
+  label: z.string().nullable(),
+});
+export type ItemLinkDto = z.infer<typeof itemLinkDtoSchema>;
+
 /** Товар в вишлисте владельца (без броней). */
 export const wishlistItemDtoSchema = z.object({
   id: z.string(),
   title: z.string(),
   description: z.string().nullable(),
+  note: z.string().nullable(),
   price: z.string().nullable(),
   currency: z.string().nullable(),
   url: z.string().nullable(),
   priority: z.number().int(),
   position: z.number().int(),
+  images: z.array(itemImageDtoSchema),
+  links: z.array(itemLinkDtoSchema),
 });
 export type WishlistItemDto = z.infer<typeof wishlistItemDtoSchema>;
 
@@ -69,3 +86,47 @@ export const wishlistDetailSchema = z.object({
   items: z.array(wishlistItemDtoSchema),
 });
 export type WishlistDetail = z.infer<typeof wishlistDetailSchema>;
+
+/** Товар в публичном просмотре. Поле `reservation` есть только у НЕ владельца. */
+export const publicItemDtoSchema = wishlistItemDtoSchema.extend({
+  reservation: z
+    .object({ status: z.enum(['free', 'reserved', 'bought']), mine: z.boolean() })
+    .optional(),
+});
+export type PublicItemDto = z.infer<typeof publicItemDtoSchema>;
+
+export const publicWishlistSchema = z.object({
+  wishlist: z.object({
+    id: z.string(),
+    title: z.string(),
+    description: z.string().nullable(),
+    eventDate: z.string().nullable(),
+    sortMode: wishlistSortSchema,
+  }),
+  owner: z.object({
+    id: z.string(),
+    username: z.string().nullable(),
+    fullName: z.string(),
+    avatarKey: z.string().nullable(),
+  }),
+  isOwner: z.boolean(),
+  items: z.array(publicItemDtoSchema),
+});
+export type PublicWishlist = z.infer<typeof publicWishlistSchema>;
+
+/** Мои подарки: что я забронировал, по вишлистам. */
+export const myReservationsSchema = z.object({
+  groups: z.array(
+    z.object({
+      wishlist: z.object({ id: z.string(), title: z.string(), shareSlug: z.string() }),
+      owner: z.object({
+        id: z.string(),
+        username: z.string().nullable(),
+        fullName: z.string(),
+        avatarKey: z.string().nullable(),
+      }),
+      items: z.array(wishlistItemDtoSchema.extend({ status: z.enum(['reserved', 'bought']) })),
+    }),
+  ),
+});
+export type MyReservations = z.infer<typeof myReservationsSchema>;

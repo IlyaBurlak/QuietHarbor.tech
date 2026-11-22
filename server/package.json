@@ -16,6 +16,7 @@
     "create-admin": "tsx --env-file=../.env src/scripts/create-admin.ts",
     "db:generate": "prisma generate",
     "postinstall": "prisma generate",
+    "cleanup-files": "tsx --env-file=../.env src/scripts/cleanup-files.ts",
     "reset-link": "tsx --env-file=../.env src/scripts/create-reset-link.ts"
   },
   "dependencies": {

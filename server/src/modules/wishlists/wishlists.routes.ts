@@ -2,11 +2,13 @@ import { Router } from 'express';
 import {
   copyItemSchema,
   createWishlistSchema,
+  itemInputSchema,
   reorderWishlistSchema,
   updateWishlistSchema,
 } from '@wishlist/shared';
 import { requireAuth } from '../../core/middleware/auth';
 import { validate } from '../../core/middleware/validate';
+import { createItem } from '../items/items.service';
 import * as service from './wishlists.service';
 
 export const wishlistsRouter = Router();
@@ -50,4 +52,8 @@ wishlistsRouter.post('/:id/duplicate', async (req, res) => {
 
 wishlistsRouter.post('/:id/items/copy', validate(copyItemSchema), async (req, res) => {
   res.status(201).json({ item: await service.copyItem(req.user!.id, id(req), req.body.itemId) });
+});
+
+wishlistsRouter.post('/:id/items', validate(itemInputSchema), async (req, res) => {
+  res.status(201).json({ item: await createItem(req.user!.id, id(req), req.body) });
 });

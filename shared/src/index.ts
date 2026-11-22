@@ -5,3 +5,4 @@ export * from './schemas/calendar';
 import './zod-ru';
 export * from './schemas/profile';
 export * from './schemas/wishlist';
+export * from './schemas/item';

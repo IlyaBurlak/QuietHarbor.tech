@@ -5,6 +5,8 @@ import { usersRouter } from './modules/users/users.routes';
 import { calendarRouter } from './modules/calendar/calendar.routes';
 import { filesRouter } from './modules/files/files.routes';
 import { healthRouter } from './modules/health/health.routes';
+import { itemsRouter } from './modules/items/items.routes';
+import { reservationsRouter } from './modules/reservations/reservations.routes';
 import { wishlistsRouter } from './modules/wishlists/wishlists.routes';
 
 /** Корневой роутер API. Каждый модуль подключается здесь: router.use('/wishlists', wishlistsRouter). */
@@ -17,3 +19,5 @@ apiRouter.use('/public', publicRouter);
 apiRouter.use('/files', filesRouter);
 apiRouter.use('/calendar', calendarRouter);
 apiRouter.use('/wishlists', wishlistsRouter);
+apiRouter.use('/', reservationsRouter);
+apiRouter.use('/items', itemsRouter);
