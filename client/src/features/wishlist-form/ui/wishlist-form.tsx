@@ -1,32 +1,29 @@
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, DatePicker, Form, Input, Radio, Select } from 'antd';
+import { Alert, Button, DatePicker, Form, Input, Radio } from 'antd';
 import dayjs from 'dayjs';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import {
   createWishlistSchema,
-  wishlistSortSchema,
   wishlistVisibilitySchema,
   type WishlistDto,
 } from '@wishlist/shared';
 import {
-  SORT_OPTIONS,
   VISIBILITY_OPTIONS,
   useCreateWishlist,
   useUpdateWishlist,
 } from '@/entities/wishlist';
 import { applyApiError } from '@/shared/lib';
 
-const formSchema = createWishlistSchema.extend({
+const formSchema = createWishlistSchema.omit({ sortMode: true }).extend({
   visibility: wishlistVisibilitySchema,
-  sortMode: wishlistSortSchema,
   description: z.string().trim().max(1000, 'Не длиннее 1000 символов'),
   eventDate: z.string().nullable(),
 });
 type Values = z.infer<typeof formSchema>;
-const FIELDS = ['title', 'description', 'visibility', 'eventDate', 'sortMode'] as const;
+const FIELDS = ['title', 'description', 'visibility', 'eventDate'] as const;
 
 /** Создание и редактирование вишлиста: передайте `wishlist` для редактирования. */
 export function WishlistForm({ wishlist }: { wishlist?: WishlistDto }) {
@@ -43,7 +40,6 @@ export function WishlistForm({ wishlist }: { wishlist?: WishlistDto }) {
       description: wishlist?.description ?? '',
       visibility: wishlist?.visibility ?? 'private',
       eventDate: wishlist?.eventDate ?? null,
-      sortMode: wishlist?.sortMode ?? 'manual',
     },
   });
   const visibility = watch('visibility');
@@ -59,6 +55,7 @@ export function WishlistForm({ wishlist }: { wishlist?: WishlistDto }) {
         const created = await create.mutateAsync({
           ...values,
           description: values.description || undefined,
+          sortMode: 'manual',
         });
         navigate(`/lists/${created.id}`);
       }
@@ -124,15 +121,6 @@ export function WishlistForm({ wishlist }: { wishlist?: WishlistDto }) {
               buttonStyle="solid"
               options={VISIBILITY_OPTIONS.map(({ value, label }) => ({ value, label }))}
             />
-          </Form.Item>
-        )}
-      />
-      <Controller
-        name="sortMode"
-        control={control}
-        render={({ field }) => (
-          <Form.Item label="Сортировка желаний">
-            <Select {...field} options={SORT_OPTIONS} />
           </Form.Item>
         )}
       />

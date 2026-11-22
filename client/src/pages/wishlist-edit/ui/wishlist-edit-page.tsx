@@ -13,7 +13,7 @@ export function WishlistEditPage() {
   return (
     <>
       <PageHeader title={editing ? 'Изменить вишлист' : 'Создать вишлист'} />
-      <Card style={{ maxWidth: 640 }}>
+      <Card className="form-card">
         {editing && isPending && <Skeleton active />}
         {editing && isError && (
           <Result
