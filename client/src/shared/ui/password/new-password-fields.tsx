@@ -16,6 +16,8 @@ interface Props<T extends FieldValues> {
   name: Path<T>;
   confirmName: Path<T>;
   passwordLabel?: string;
+  /** Без шкалы надёжности и галочки «совпадают» — только два поля и проверка на совпадение. */
+  simple?: boolean;
 }
 
 /** Новый пароль + шкала надёжности + повтор с проверкой на лету. */
@@ -25,6 +27,7 @@ export function NewPasswordFields<T extends FieldValues>({
   name,
   confirmName,
   passwordLabel = 'Пароль',
+  simple = false,
 }: Props<T>) {
   const password = (useWatch({ control, name }) as string | undefined) ?? '';
   const confirm = (useWatch({ control, name: confirmName }) as string | undefined) ?? '';
@@ -52,12 +55,12 @@ export function NewPasswordFields<T extends FieldValues>({
           </Form.Item>
         )}
       />
-      <PasswordStrength password={password} />
+      {!simple && <PasswordStrength password={password} />}
       <Controller
         name={confirmName}
         control={control}
         render={({ field, fieldState }) => {
-          const matches = !!confirm && confirm === password && !fieldState.error;
+          const matches = !simple && !!confirm && confirm === password && !fieldState.error;
           return (
             <Form.Item
               label="Повторите пароль"

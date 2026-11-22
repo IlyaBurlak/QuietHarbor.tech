@@ -4,3 +4,4 @@ export * from './schemas/user';
 export * from './schemas/calendar';
 import './zod-ru';
 export * from './schemas/profile';
+export * from './schemas/wishlist';

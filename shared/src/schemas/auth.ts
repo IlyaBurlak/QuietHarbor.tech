@@ -21,7 +21,7 @@ export const usernameSchema = z
 
 export const passwordSchema = z
   .string()
-  .min(8, 'Не короче 8 символов')
+  .min(6, 'Не короче 6 символов')
   .max(128, 'Не длиннее 128 символов');
 
 const nameSchema = (label: string) =>

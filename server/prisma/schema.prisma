@@ -41,6 +41,12 @@ enum WishlistVisibility {
   friends
 }
 
+enum WishlistSort {
+  manual
+  priority
+  price
+}
+
 enum ReservationStatus {
   reserved
   bought
@@ -151,6 +157,7 @@ model Wishlist {
   title       String
   description String?
   visibility  WishlistVisibility @default(private)
+  sortMode    WishlistSort       @default(manual)
   shareSlug   String             @unique
   eventDate   DateTime?          @db.Date
   createdAt   DateTime           @default(now())

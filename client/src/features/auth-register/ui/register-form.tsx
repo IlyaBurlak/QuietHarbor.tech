@@ -132,6 +132,7 @@ export function RegisterForm() {
         trigger={trigger}
         name="password"
         confirmName="confirmPassword"
+        simple
       />
 
       <Button type="primary" htmlType="submit" block loading={isSubmitting}>
