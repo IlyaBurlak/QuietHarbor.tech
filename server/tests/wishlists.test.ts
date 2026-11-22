@@ -121,9 +121,9 @@ describe('порядок, дубли, копирование', () => {
     const agent = await signedInAgent(app);
     const { id } = await withItems(agent);
     await agent.patch(`/api/wishlists/${id}`).send({ sortMode: 'priority' });
-    expect((await agent.get(`/api/wishlists/${id}`)).body.items.map((i: any) => i.title)).toEqual(['B', 'C', 'A']);
+    expect((await agent.get(`/api/wishlists/${id}`)).body.items.map((i: { title: string }) => i.title)).toEqual(['B', 'C', 'A']);
     await agent.patch(`/api/wishlists/${id}`).send({ sortMode: 'price' });
-    expect((await agent.get(`/api/wishlists/${id}`)).body.items.map((i: any) => i.title)).toEqual(['B', 'A', 'C']);
+    expect((await agent.get(`/api/wishlists/${id}`)).body.items.map((i: { title: string }) => i.title)).toEqual(['B', 'A', 'C']);
   });
 
   it('переставляет вручную и отвергает неверный набор id', async () => {
@@ -131,7 +131,7 @@ describe('порядок, дубли, копирование', () => {
     const { id, items } = await withItems(agent);
     const [a, b, c] = items.map((i) => i.id);
     const ok = await agent.patch(`/api/wishlists/${id}/reorder`).send({ itemIds: [c, a, b] });
-    expect(ok.body.items.map((i: any) => i.title)).toEqual(['C', 'A', 'B']);
+    expect(ok.body.items.map((i: { title: string }) => i.title)).toEqual(['C', 'A', 'B']);
     expect(ok.body.wishlist.sortMode).toBe('manual');
     const bad = await agent.patch(`/api/wishlists/${id}/reorder`).send({ itemIds: [a, b] });
     expect(bad.status).toBe(400);

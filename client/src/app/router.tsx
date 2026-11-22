@@ -9,13 +9,14 @@ import { ComingSoonPage } from '@/pages/coming-soon';
 import { CalendarPage } from '@/pages/calendar';
 import { ProfilePage } from '@/pages/profile';
 import { SettingsPage } from '@/pages/settings';
+import { WishlistsPage } from '@/pages/wishlists';
+import { WishlistEditPage } from '@/pages/wishlist-edit';
+import { WishlistViewPage } from '@/pages/wishlist-view';
 import { NotFoundPage } from '@/pages/not-found';
 import { GuestOnly, RequireAuth } from './guards';
 
 /** Разделы из плана, которые появятся в своих эпиках. Пока показывают заглушку, чтобы навигация была целой. */
 const SOON: { path: string; title: string; description?: string }[] = [
-  { path: '/lists', title: 'Мои желания', description: 'Ваши вишлисты и желания.' },
-  { path: '/lists/new', title: 'Создать вишлист' },
   { path: '/lists/secret', title: 'Секретные', description: 'Вишлисты, которые видите только вы.' },
   { path: '/lists/done', title: 'Исполненные', description: 'Желания, которые уже сбылись.' },
   {
@@ -52,6 +53,10 @@ export function AppRouter() {
                 element={<ComingSoonPage title={title} description={description} />}
               />
             ))}
+            <Route path="/lists" element={<WishlistsPage />} />
+            <Route path="/lists/new" element={<WishlistEditPage />} />
+            <Route path="/lists/:id" element={<WishlistViewPage />} />
+            <Route path="/lists/:id/edit" element={<WishlistEditPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
