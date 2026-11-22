@@ -20,7 +20,7 @@ export const SORT_OPTIONS: { value: WishlistSort; label: string }[] = [
   { value: 'price', label: 'По цене' },
 ];
 
-export const PRIORITY_LABEL: Record<number, string> = { 1: 'Низкий', 2: 'Обычный', 3: 'Высокий' };
+export const PRIORITY_LABEL: Record<number, string> = { 1: 'Было бы неплохо', 2: 'Хочу', 3: 'Очень хочу' };
 
 /** Ссылка для шаринга; публичная страница появится в эпике 5. */
 export const shareUrl = (slug: string) => `${window.location.origin}/w/${slug}`;

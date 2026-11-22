@@ -18,3 +18,17 @@ export {
   shareUrl,
 } from './config/labels';
 export { WishlistCard } from './ui/wishlist-card';
+export {
+  usePublicWishlist,
+  useMyReservations,
+  useCreateItem,
+  useUpdateItem,
+  useDeleteItem,
+  useItemImages,
+  publicWishlistKey,
+  MY_RESERVATIONS_KEY,
+} from './model/use-items';
+export { reserveRequest, releaseRequest, boughtRequest } from './api/wishlist-api';
+export { formatPrice } from './lib/format';
+export { ItemCover } from './ui/item-cover';
+export { uploadImageRequest } from './api/wishlist-api';

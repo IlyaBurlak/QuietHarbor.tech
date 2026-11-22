@@ -15,16 +15,49 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Card, Tag, Typography } from 'antd';
-import { GripVertical } from 'lucide-react';
+import { App, Button, Card, Dropdown, Tag, Typography } from 'antd';
+import { GripVertical, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import type { WishlistItemDto } from '@wishlist/shared';
-import { PRIORITY_LABEL, useReorder } from '@/entities/wishlist';
+import {
+  ItemCover,
+  PRIORITY_LABEL,
+  formatPrice,
+  useDeleteItem,
+  useReorder,
+} from '@/entities/wishlist';
 
-function ItemCard({ item, draggable }: { item: WishlistItemDto; draggable: boolean }) {
+function ItemCard({
+  item,
+  wishlistId,
+  draggable,
+}: {
+  item: WishlistItemDto;
+  wishlistId: string;
+  draggable: boolean;
+}) {
+  const { modal, message } = App.useApp();
+  const navigate = useNavigate();
+  const remove = useDeleteItem();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
     disabled: !draggable,
   });
+  const price = formatPrice(item.price, item.currency);
+
+  const confirmDelete = () =>
+    modal.confirm({
+      title: `Удалить «${item.title}»?`,
+      content: 'Желание и его фото будут удалены безвозвратно.',
+      okText: 'Удалить',
+      okButtonProps: { danger: true },
+      cancelText: 'Отмена',
+      onOk: async () => {
+        await remove.mutateAsync(item.id);
+        void message.success('Желание удалено');
+      },
+    });
+
   return (
     <li
       ref={setNodeRef}
@@ -35,33 +68,52 @@ function ItemCard({ item, draggable }: { item: WishlistItemDto; draggable: boole
         opacity: isDragging ? 0.6 : 1,
       }}
     >
-      <Card size="small" className="item-card">
+      <Card
+        size="small"
+        className="item-card"
+        cover={<ItemCover images={item.images} alt={item.title} />}
+      >
         <div className="item-card__head">
-          <Typography.Text strong>{item.title}</Typography.Text>
-          {draggable && (
-            <button
-              type="button"
-              className="drag-handle"
-              aria-label={`Переместить «${item.title}»`}
-              {...attributes}
-              {...listeners}
+          <Link to={`/lists/${wishlistId}/items/${item.id}`} className="item-card__title">
+            {item.title}
+          </Link>
+          <div className="item-card__tools">
+            {draggable && (
+              <button
+                type="button"
+                className="drag-handle"
+                aria-label={`Переместить «${item.title}»`}
+                {...attributes}
+                {...listeners}
+              >
+                <GripVertical size={16} aria-hidden />
+              </button>
+            )}
+            <Dropdown
+              trigger={['click']}
+              menu={{
+                items: [
+                  { key: 'edit', icon: <Pencil size={14} />, label: 'Изменить' },
+                  { key: 'delete', icon: <Trash2 size={14} />, label: 'Удалить', danger: true },
+                ],
+                onClick: ({ key }) => {
+                  if (key === 'edit') navigate(`/lists/${wishlistId}/items/${item.id}/edit`);
+                  if (key === 'delete') confirmDelete();
+                },
+              }}
             >
-              <GripVertical size={16} aria-hidden />
-            </button>
-          )}
+              <Button
+                type="text"
+                size="small"
+                aria-label={`Действия с «${item.title}»`}
+                icon={<MoreHorizontal size={16} aria-hidden />}
+              />
+            </Dropdown>
+          </div>
         </div>
-        {item.description && (
-          <Typography.Paragraph type="secondary" ellipsis={{ rows: 2 }} style={{ marginBottom: 8 }}>
-            {item.description}
-          </Typography.Paragraph>
-        )}
         <div className="item-card__meta">
-          {item.price && (
-            <Typography.Text>
-              {Number(item.price).toLocaleString('ru-RU')} {item.currency === 'RUB' ? '₽' : item.currency}
-            </Typography.Text>
-          )}
-          <Tag bordered={false}>{PRIORITY_LABEL[item.priority] ?? 'Обычный'}</Tag>
+          {price ? <Typography.Text>{price}</Typography.Text> : <span />}
+          <Tag bordered={false}>{PRIORITY_LABEL[item.priority] ?? 'Хочу'}</Tag>
         </div>
       </Card>
     </li>
@@ -95,7 +147,7 @@ export function WishlistItems({ wishlistId, items, manual }: Props) {
       <SortableContext items={items.map((i) => i.id)} strategy={rectSortingStrategy}>
         <ul className="item-grid">
           {items.map((item) => (
-            <ItemCard key={item.id} item={item} draggable={manual} />
+            <ItemCard key={item.id} item={item} wishlistId={wishlistId} draggable={manual} />
           ))}
         </ul>
       </SortableContext>

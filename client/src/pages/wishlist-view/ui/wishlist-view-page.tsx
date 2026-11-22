@@ -1,5 +1,5 @@
 import { Button, Result, Segmented, Skeleton } from 'antd';
-import { Pencil } from 'lucide-react';
+import { Pencil, Plus } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { SORT_OPTIONS, VISIBILITY_LABEL, useUpdateWishlist, useWishlist } from '@/entities/wishlist';
 import { ShareWishlistButton } from '@/features/share-wishlist';
@@ -41,6 +41,11 @@ export function WishlistViewPage() {
         }
         actions={
           <>
+            <Link to={`/lists/${wishlist.id}/items/new`}>
+              <Button type="primary" icon={<Plus size={16} aria-hidden />}>
+                Добавить желание
+              </Button>
+            </Link>
             <ShareWishlistButton wishlist={wishlist} />
             <Link to={`/lists/${wishlist.id}/edit`}>
               <Button icon={<Pencil size={16} aria-hidden />}>Изменить</Button>
@@ -58,7 +63,11 @@ export function WishlistViewPage() {
         />
       )}
       {items.length === 0 ? (
-        <EmptyState text="Добавьте первое желание — друзья увидят, что вам подарить." />
+        <EmptyState text="Добавьте первое желание — друзья увидят, что вам подарить.">
+          <Link to={`/lists/${wishlist.id}/items/new`}>
+            <Button type="primary">Добавить желание</Button>
+          </Link>
+        </EmptyState>
       ) : (
         <WishlistItems
           wishlistId={wishlist.id}
