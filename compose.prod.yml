@@ -1,8 +1,17 @@
 # Прод-стек: Caddy (HTTPS, фронтенд, раздача фото) + бэкенд + база + разовые миграции.
 # Запуск из корня: npm run prod:up. Переменные берутся из .env.production (шаблон — .env.production.example).
 name: wishlist-prod
+
+# Ротация логов Docker: без этого json-логи растут бесконечно и забивают диск
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '3'
+
 services:
   db:
+    logging: *default-logging
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
@@ -31,6 +40,7 @@ services:
         condition: service_healthy
 
   server:
+    logging: *default-logging
     build:
       context: .
       dockerfile: deploy/server.Dockerfile
@@ -45,8 +55,6 @@ services:
       SESSION_SECRET: ${SESSION_SECRET:?задайте SESSION_SECRET}
       UPLOADS_DIR: /data/uploads
       SUPPORT_CONTACT_URL: ${SUPPORT_CONTACT_URL:-}
-      ADMIN_USERNAME: ${ADMIN_USERNAME:-}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
@@ -68,7 +76,29 @@ services:
       retries: 10
       start_period: 10s
 
+  # Разовая задача: создать/обновить администратора (npm run prod:create-admin).
+  # Пароль админа доступен только этому контейнеру, а не работающему серверу.
+  create-admin:
+    profiles: [tools]
+    build:
+      context: .
+      dockerfile: deploy/server.Dockerfile
+      target: runtime
+    restart: 'no'
+    command: ['node', 'dist/scripts/create-admin.js']
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: *database_url
+      CLIENT_URL: ${CLIENT_URL:?задайте CLIENT_URL}
+      SESSION_SECRET: ${SESSION_SECRET:?задайте SESSION_SECRET}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
   caddy:
+    logging: *default-logging
     build:
       context: .
       dockerfile: deploy/web.Dockerfile

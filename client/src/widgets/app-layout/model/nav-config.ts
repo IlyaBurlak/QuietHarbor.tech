@@ -11,7 +11,6 @@ import {
   Sparkles,
   User,
   UserCheck,
-  UserPlus,
   Users,
   type LucideIcon,
 } from 'lucide-react';
@@ -20,6 +19,8 @@ export interface NavItem {
   to: string;
   label: string;
   icon: LucideIcon;
+  /** Счётчик у пункта: сколько входящих заявок в друзья. */
+  badge?: 'friendRequests';
 }
 
 export interface NavSection {
@@ -73,8 +74,7 @@ export const SECTIONS: NavSection[] = [
     prefixes: ['/friends'],
     items: [
       { to: '/friends', label: 'Друзья', icon: Users },
-      { to: '/friends/requests', label: 'Заявки', icon: UserCheck },
-      { to: '/friends/find', label: 'Найти друзей', icon: UserPlus },
+      { to: '/friends/requests', label: 'Заявки', icon: UserCheck, badge: 'friendRequests' },
     ],
   },
   {

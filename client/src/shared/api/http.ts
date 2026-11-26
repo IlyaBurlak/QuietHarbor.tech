@@ -17,7 +17,18 @@ http.interceptors.response.use(
   },
 );
 
+function isApiError(value: unknown): value is ApiError {
+  const v = value as Partial<ApiError> | null;
+  return typeof v === 'object' && v !== null && typeof v.code === 'string' && typeof v.message === 'string';
+}
+
 export function toApiError(error: unknown): ApiError {
-  if (axios.isAxiosError<ApiError>(error) && error.response?.data?.code) return error.response.data;
+  if (axios.isAxiosError<ApiError>(error)) {
+    return error.response?.data?.code
+      ? error.response.data
+      : { code: 'NETWORK_ERROR', message: 'Не удалось связаться с сервером' };
+  }
+  // Перехватчик уже превращает ошибки Axios в ApiError, поэтому повторный вызов должен их узнавать
+  if (isApiError(error)) return error;
   return { code: 'NETWORK_ERROR', message: 'Не удалось связаться с сервером' };
 }

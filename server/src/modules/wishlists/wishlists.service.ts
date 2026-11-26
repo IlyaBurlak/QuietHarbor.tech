@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import type { Item, Wishlist, WishlistSort } from '@prisma/client';
+import type { Item, SortDir, Wishlist, WishlistSort } from '@prisma/client';
 import type { CreateWishlistInput, UpdateWishlistInput } from '@wishlist/shared';
 import { prisma } from '../../core/db/prisma';
 import { forbidden, HttpError, notFound } from '../../core/http/errors';
@@ -13,19 +13,20 @@ export const generateShareSlug = () => randomBytes(18).toString('base64url');
 
 const toDate = (v: string | null | undefined) => (v ? new Date(`${v}T00:00:00.000Z`) : null);
 
-/** Порядок товаров по режиму сортировки; цены без значения — в конце. */
-export function sortItems<T extends Item>(items: T[], mode: WishlistSort): T[] {
+/** Порядок товаров по режиму и направлению; товары без цены всегда в конце. */
+export function sortItems<T extends Item>(items: T[], mode: WishlistSort, dir: SortDir): T[] {
   const byPosition = (a: T, b: T) =>
     a.position - b.position || a.createdAt.getTime() - b.createdAt.getTime();
+  const k = dir === 'asc' ? 1 : -1;
   if (mode === 'priority') {
-    return [...items].sort((a, b) => b.priority - a.priority || byPosition(a, b));
+    return [...items].sort((a, b) => k * (a.priority - b.priority) || byPosition(a, b));
   }
   if (mode === 'price') {
     return [...items].sort((a, b) => {
       if (!a.price && !b.price) return byPosition(a, b);
       if (!a.price) return 1;
       if (!b.price) return -1;
-      return a.price.comparedTo(b.price) || byPosition(a, b);
+      return k * a.price.comparedTo(b.price) || byPosition(a, b);
     });
   }
   return [...items].sort(byPosition);
@@ -72,7 +73,7 @@ export async function getWishlist(userId: string, id: string) {
     include: { items: { include: ITEM_INCLUDE } },
   });
   if (!w || !(await canViewWishlist(userId, w))) throw notFound('Вишлист не найден');
-  const items = sortItems(w.items, w.sortMode).map(toItemDto);
+  const items = sortItems(w.items, w.sortMode, w.sortDir).map(toItemDto);
   return { wishlist: toWishlistDto(w, items.length), items };
 }
 
@@ -85,6 +86,7 @@ export async function updateWishlist(userId: string, id: string, input: UpdateWi
       description: input.description === undefined ? undefined : input.description || null,
       visibility: input.visibility,
       sortMode: input.sortMode,
+      sortDir: input.sortDir,
       eventDate: input.eventDate === undefined ? undefined : toDate(input.eventDate),
     },
     include: { _count: { select: { items: true } } },
@@ -144,6 +146,7 @@ export async function duplicateWishlist(userId: string, id: string) {
       description: src.description,
       visibility: 'private',
       sortMode: src.sortMode,
+      sortDir: src.sortDir,
       eventDate: src.eventDate,
       shareSlug: generateShareSlug(),
       items: {

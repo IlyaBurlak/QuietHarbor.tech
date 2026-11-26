@@ -11,6 +11,21 @@ const MAX_INPUT_PIXELS = 40_000_000;
 
 export const FILE_KEY_PATTERN = /^[a-f0-9]{32}\.webp$/;
 
+/** Не больше двух обработок картинок одновременно: sharp ест память, а сервер небольшой. */
+const MAX_PARALLEL_IMAGES = 2;
+let running = 0;
+const waiting: (() => void)[] = [];
+async function withImageSlot<T>(task: () => Promise<T>): Promise<T> {
+  if (running >= MAX_PARALLEL_IMAGES) await new Promise<void>((resolve) => waiting.push(resolve));
+  running++;
+  try {
+    return await task();
+  } finally {
+    running--;
+    waiting.shift()?.();
+  }
+}
+
 const invalidImage = () =>
   new HttpError(400, 'INVALID_IMAGE', 'Подходят только изображения JPG, PNG и WebP');
 
@@ -25,10 +40,11 @@ export async function saveImage(
 ): Promise<string> {
   let output: Buffer;
   try {
+    output = await withImageSlot(async () => {
     const image = sharp(data, { limitInputPixels: MAX_INPUT_PIXELS });
     const meta = await image.metadata();
     if (!meta.format || !ALLOWED_FORMATS.has(meta.format)) throw invalidImage();
-    output = await image
+    return image
       .rotate()
       .resize(options.size, options.square ? options.size : undefined, {
         fit: options.square ? 'cover' : 'inside',
@@ -36,6 +52,7 @@ export async function saveImage(
       })
       .webp({ quality: 82 })
       .toBuffer();
+    });
   } catch (e) {
     if (e instanceof HttpError) throw e;
     throw invalidImage();

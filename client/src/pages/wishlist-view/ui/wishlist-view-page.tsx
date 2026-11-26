@@ -1,11 +1,17 @@
-import { Button, Result, Segmented, Skeleton } from 'antd';
-import { Pencil, Plus } from 'lucide-react';
+import { Button, Result, Segmented, Select, Skeleton } from 'antd';
+import { ArrowDownUp, Pencil, Plus } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { SORT_OPTIONS, VISIBILITY_LABEL, useUpdateWishlist, useWishlist } from '@/entities/wishlist';
 import { ShareWishlistButton } from '@/features/share-wishlist';
 import { EmptyState, PageHeader } from '@/shared/ui';
 import { WishlistItems } from '@/widgets/wishlist-items';
-import type { WishlistSort } from '@wishlist/shared';
+import type { SortDir, WishlistSort } from '@wishlist/shared';
+
+const DIR_HINT: Record<WishlistSort, Record<SortDir, string>> = {
+  manual: { desc: '', asc: '' },
+  priority: { desc: 'сначала самые желанные', asc: 'сначала менее желанные' },
+  price: { desc: 'сначала дорогие', asc: 'сначала дешёвые' },
+};
 
 export function WishlistViewPage() {
   const { id = '' } = useParams();
@@ -54,13 +60,30 @@ export function WishlistViewPage() {
         }
       />
       {items.length > 0 && (
-        <Segmented<WishlistSort>
-          className="sort-switch"
-          value={wishlist.sortMode}
-          options={SORT_OPTIONS}
-          onChange={(sortMode) => update.mutate({ sortMode })}
-          aria-label="Сортировка желаний"
-        />
+        <div className="sort-bar">
+          <Segmented<WishlistSort>
+            value={wishlist.sortMode}
+            options={SORT_OPTIONS}
+            onChange={(sortMode) =>
+              // По приоритету сначала важные, по цене сначала дешёвые
+              update.mutate({ sortMode, sortDir: sortMode === 'price' ? 'asc' : 'desc' })
+            }
+            aria-label="Сортировка желаний"
+          />
+          {wishlist.sortMode !== 'manual' && (
+            <Select<SortDir>
+              className="sort-dir"
+              value={wishlist.sortDir}
+              onChange={(sortDir) => update.mutate({ sortDir })}
+              aria-label="Порядок сортировки"
+              suffixIcon={<ArrowDownUp size={16} aria-hidden />}
+              options={(['desc', 'asc'] as const).map((value) => ({
+                value,
+                label: `${value === 'desc' ? 'По убыванию' : 'По возрастанию'} — ${DIR_HINT[wishlist.sortMode][value]}`,
+              }))}
+            />
+          )}
+        </div>
       )}
       {items.length === 0 ? (
         <EmptyState text="Добавьте первое желание — друзья увидят, что вам подарить.">

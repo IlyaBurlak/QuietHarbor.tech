@@ -3,16 +3,20 @@ import { Link, useLocation } from 'react-router-dom';
 import { usePublicConfig } from '@/shared/api';
 import { APP_NAME } from '@/shared/config';
 import { LifeBuoy } from 'lucide-react';
+import { Badge } from 'antd';
+import { useNotificationSummary } from '@/entities/notification';
 import { activeItemTo, sideGroups, type NavItem } from '../model/nav-config';
 
 /** Список ссылок бокового меню; используется и на десктопе, и в выезжающем меню на телефоне. */
 export function NavList({ items, onNavigate }: { items: NavItem[]; onNavigate?: () => void }) {
   const { pathname } = useLocation();
   const active = activeItemTo(pathname, items);
+  const { data: summary } = useNotificationSummary();
   return (
     <ul className="side-list">
-      {items.map(({ to, label, icon: Icon }) => {
+      {items.map(({ to, label, icon: Icon, badge }) => {
         const isActive = to === active;
+        const count = badge ? (summary?.[badge] ?? 0) : 0;
         return (
           <li key={to}>
             <Link
@@ -23,6 +27,9 @@ export function NavList({ items, onNavigate }: { items: NavItem[]; onNavigate?: 
             >
               <Icon size={22} fill={isActive ? 'currentColor' : 'none'} aria-hidden />
               <span>{label}</span>
+              {count > 0 && (
+                <Badge count={count} className="side-link__badge" aria-label={`Новых: ${count}`} />
+              )}
             </Link>
           </li>
         );

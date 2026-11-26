@@ -1,6 +1,7 @@
 import type {
   ChangePasswordInput,
   DeleteAccountInput,
+  HomeSettings,
   Profile,
   SessionUser,
   UpdateProfileInput,
@@ -29,3 +30,9 @@ export const uploadAvatarRequest = (file: File) => {
 
 export const deleteAvatarRequest = () =>
   http.delete<{ user: SessionUser; profile: Profile }>('/users/me/avatar').then((r) => r.data);
+
+export const fetchHomeSettings = () =>
+  http.get<HomeSettings>('/users/me/home').then((r) => r.data);
+
+export const saveHomeSettings = (settings: HomeSettings) =>
+  http.put<HomeSettings>('/users/me/home', settings).then((r) => r.data);

@@ -1,4 +1,4 @@
-import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { env } from '../../config/env';
 
@@ -9,6 +9,8 @@ export interface Storage {
   remove(key: string): Promise<void>;
   /** Все ключи в хранилище (для чистки неиспользуемых файлов). */
   list(): Promise<string[]>;
+  /** Общий размер всех файлов в байтах. */
+  totalSize(): Promise<number>;
 }
 
 class LocalStorage implements Storage {
@@ -38,6 +40,18 @@ class LocalStorage implements Storage {
 
   async remove(key: string) {
     await rm(this.resolve(key), { force: true });
+  }
+
+  async totalSize() {
+    let total = 0;
+    for (const key of await this.list()) {
+      try {
+        total += (await stat(this.resolve(key))).size;
+      } catch {
+        // файл мог исчезнуть между чтением списка и stat
+      }
+    }
+    return total;
   }
 
   async list() {

@@ -6,6 +6,9 @@ export type WishlistVisibility = z.infer<typeof wishlistVisibilitySchema>;
 export const wishlistSortSchema = z.enum(['manual', 'priority', 'price']);
 export type WishlistSort = z.infer<typeof wishlistSortSchema>;
 
+export const sortDirSchema = z.enum(['asc', 'desc']);
+export type SortDir = z.infer<typeof sortDirSchema>;
+
 const dateOnly = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Дата в формате ГГГГ-ММ-ДД');
 
 export const createWishlistSchema = z.object({
@@ -24,6 +27,7 @@ export const updateWishlistSchema = z
     visibility: wishlistVisibilitySchema,
     eventDate: dateOnly.nullable(),
     sortMode: wishlistSortSchema,
+    sortDir: sortDirSchema,
   })
   .partial();
 export type UpdateWishlistInput = z.infer<typeof updateWishlistSchema>;
@@ -43,6 +47,7 @@ export const wishlistDtoSchema = z.object({
   description: z.string().nullable(),
   visibility: wishlistVisibilitySchema,
   sortMode: wishlistSortSchema,
+  sortDir: sortDirSchema,
   eventDate: z.string().nullable(),
   shareSlug: z.string(),
   itemsCount: z.number().int(),
@@ -102,6 +107,7 @@ export const publicWishlistSchema = z.object({
     description: z.string().nullable(),
     eventDate: z.string().nullable(),
     sortMode: wishlistSortSchema,
+    sortDir: sortDirSchema,
   }),
   owner: z.object({
     id: z.string(),

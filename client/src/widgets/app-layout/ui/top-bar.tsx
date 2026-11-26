@@ -1,14 +1,18 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Tooltip } from 'antd';
+import { Badge, Tooltip } from 'antd';
 import { Anchor, Menu, Search } from 'lucide-react';
 import type { CSSProperties } from 'react';
 import { APP_NAME } from '@/shared/config';
+import { useNotificationSummary } from '@/entities/notification';
+import { NotificationsPopover } from './notifications-popover';
 import { SEARCH_PATH, SECTIONS, findSection } from '../model/nav-config';
 
 export function TopBar({ onOpenMenu }: { onOpenMenu: () => void }) {
   const { pathname } = useLocation();
   const current = findSection(pathname);
   const searching = pathname === SEARCH_PATH;
+  const { data: summary } = useNotificationSummary();
+  const friendRequests = summary?.friendRequests ?? 0;
 
   return (
     <header className="topbar">
@@ -30,7 +34,9 @@ export function TopBar({ onOpenMenu }: { onOpenMenu: () => void }) {
                   aria-current={active ? 'page' : undefined}
                   style={{ '--tab-color': color } as CSSProperties}
                 >
-                  <Icon size={24} fill={active ? 'currentColor' : 'none'} aria-hidden />
+                  <Badge count={key === 'friends' ? friendRequests : 0} size="small" offset={[4, -2]}>
+                    <Icon size={24} fill={active ? 'currentColor' : 'none'} aria-hidden />
+                  </Badge>
                 </Link>
               </Tooltip>
             );
@@ -49,6 +55,7 @@ export function TopBar({ onOpenMenu }: { onOpenMenu: () => void }) {
       </div>
 
       <div className="topbar__end">
+        <NotificationsPopover />
         <button type="button" className="circle-btn" aria-label="Меню" onClick={onOpenMenu}>
           <Menu size={22} aria-hidden />
         </button>

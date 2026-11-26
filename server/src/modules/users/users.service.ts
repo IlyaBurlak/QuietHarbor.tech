@@ -1,6 +1,11 @@
 import argon2 from 'argon2';
 import { Prisma } from '@prisma/client';
-import type { ChangePasswordInput, DeleteAccountInput, UpdateProfileInput } from '@wishlist/shared';
+import type {
+  ChangePasswordInput,
+  DeleteAccountInput,
+  HomeSettings,
+  UpdateProfileInput,
+} from '@wishlist/shared';
 import { prisma } from '../../core/db/prisma';
 import { HttpError, forbidden } from '../../core/http/errors';
 import { deleteFile, saveImage } from '../files/files.service';
@@ -116,10 +121,26 @@ export async function deleteAccount(userId: string, input: DeleteAccountInput) {
     );
   }
 
+  const images = await prisma.itemImage.findMany({
+    where: { item: { wishlist: { ownerId: userId } } },
+    select: { fileKey: true },
+  });
+
   await prisma.$transaction([
     prisma.group.deleteMany({ where: { ownerId: userId } }),
     prisma.user.delete({ where: { id: userId } }),
   ]);
-  // TODO(эпик 4): так же удалять фото товаров
-  await deleteFile(user.avatarKey);
+  await Promise.all([deleteFile(user.avatarKey), ...images.map((i) => deleteFile(i.fileKey))]);
+}
+
+/** Скрытые блоки главной страницы. */
+export async function getHomeSettings(userId: string): Promise<HomeSettings> {
+  const user = await getUser(userId);
+  return { hidden: user.homeHidden as HomeSettings['hidden'] };
+}
+
+export async function setHomeSettings(userId: string, input: HomeSettings): Promise<HomeSettings> {
+  const hidden = [...new Set(input.hidden)];
+  await prisma.user.update({ where: { id: userId }, data: { homeHidden: hidden } });
+  return { hidden };
 }

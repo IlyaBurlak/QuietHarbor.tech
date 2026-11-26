@@ -122,7 +122,7 @@ describe('порядок, дубли, копирование', () => {
     const { id } = await withItems(agent);
     await agent.patch(`/api/wishlists/${id}`).send({ sortMode: 'priority' });
     expect((await agent.get(`/api/wishlists/${id}`)).body.items.map((i: { title: string }) => i.title)).toEqual(['B', 'C', 'A']);
-    await agent.patch(`/api/wishlists/${id}`).send({ sortMode: 'price' });
+    await agent.patch(`/api/wishlists/${id}`).send({ sortMode: 'price', sortDir: 'asc' });
     expect((await agent.get(`/api/wishlists/${id}`)).body.items.map((i: { title: string }) => i.title)).toEqual(['B', 'A', 'C']);
   });
 
@@ -163,5 +163,26 @@ describe('порядок, дубли, копирование', () => {
     const { items } = await withItems(owner);
     const mine = (await make(other)).body.wishlist.id;
     expect((await other.post(`/api/wishlists/${mine}/items/copy`).send({ itemId: items[0]!.id })).status).toBe(404);
+  });
+});
+
+describe('направление сортировки', () => {
+  it('меняет порядок на обратный, товары без цены остаются в конце', async () => {
+    const agent = await signedInAgent(app);
+    const { id } = (await make(agent)).body.wishlist;
+    for (const d of [
+      { title: 'A', priority: 1, price: 300, position: 0 },
+      { title: 'B', priority: 5, price: 100, position: 1 },
+      { title: 'C', priority: 3, price: null, position: 2 },
+    ]) await prisma.item.create({ data: { ...d, wishlistId: id } });
+    const titles = async () =>
+      (await agent.get(`/api/wishlists/${id}`)).body.items.map((i: { title: string }) => i.title);
+
+    await agent.patch(`/api/wishlists/${id}`).send({ sortMode: 'priority', sortDir: 'asc' });
+    expect(await titles()).toEqual(['A', 'C', 'B']);
+    await agent.patch(`/api/wishlists/${id}`).send({ sortDir: 'desc' });
+    expect(await titles()).toEqual(['B', 'C', 'A']);
+    await agent.patch(`/api/wishlists/${id}`).send({ sortMode: 'price', sortDir: 'desc' });
+    expect(await titles()).toEqual(['A', 'B', 'C']);
   });
 });

@@ -4,7 +4,7 @@ import { prisma } from '../core/db/prisma';
 
 const username = env.ADMIN_USERNAME?.trim().toLowerCase();
 const password = env.ADMIN_PASSWORD;
-const KNOWN_WEAK = ['change-me-12345', 'password123', 'admin123456'];
+const KNOWN_WEAK = ['change-me', 'changeme', 'password', 'admin123', 'qwerty', '12345678'];
 
 function fail(message: string): never {
   console.error(message);
@@ -16,8 +16,16 @@ if (!/^[a-z0-9_.]{3,20}$/.test(username)) {
   fail('ADMIN_USERNAME: 3–20 символов, латиница, цифры, _ и точка');
 }
 if (password.length < 12) fail('ADMIN_PASSWORD должен быть не короче 12 символов');
-if (KNOWN_WEAK.includes(password))
-  fail('ADMIN_PASSWORD похож на пример из .env.example, задайте свой');
+
+// Пароль администратора должен быть действительно стойким, а не «каким-то длинным»
+const classes = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9]/].filter((re) => re.test(password)).length;
+if (classes < 3) {
+  fail('ADMIN_PASSWORD: нужны хотя бы три вида символов из четырёх (строчные, заглавные, цифры, знаки)');
+}
+const lower = password.toLowerCase();
+if (KNOWN_WEAK.some((w) => lower.includes(w)) || lower.includes(username)) {
+  fail('ADMIN_PASSWORD похож на пример или содержит ник. Придумайте свой, случайный');
+}
 
 // Не повышаем обычного пользователя до админа молча
 const existing = await prisma.user.findUnique({ where: { username } });

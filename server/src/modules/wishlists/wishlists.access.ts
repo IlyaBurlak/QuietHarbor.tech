@@ -27,6 +27,12 @@ export async function canViewWishlist(
   wishlist: AccessTarget,
 ): Promise<boolean> {
   if (userId && userId === wishlist.ownerId) return true;
+  // Вишлисты заблокированного скрыты для всех; данные остаются и вернутся после разблокировки
+  const owner = await prisma.user.findUnique({
+    where: { id: wishlist.ownerId },
+    select: { status: true },
+  });
+  if (!owner || owner.status !== 'active') return false;
   switch (wishlist.visibility) {
     case 'link':
       return true;

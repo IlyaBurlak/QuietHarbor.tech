@@ -5,6 +5,9 @@ declare global {
     interface Request {
       user?: SessionUser;
       sessionToken?: string;
+      /** Администратор, прошедший requireAdmin. */
+      admin?: SessionUser;
+      adminToken?: string;
     }
   }
 }

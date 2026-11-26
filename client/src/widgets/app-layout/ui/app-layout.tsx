@@ -8,8 +8,11 @@ export function AppLayout() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { pathname } = useLocation();
 
-  // После перехода возвращаем прокрутку наверх
-  useEffect(() => window.scrollTo(0, 0), [pathname]);
+  // После перехода возвращаем прокрутку наверх. Тело в фигурных скобках обязательно:
+  // в новых браузерах scrollTo возвращает Promise, а React принимает из эффекта только функцию очистки.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
 
   return (
     <div className="shell">

@@ -4,8 +4,8 @@ export const CURRENCIES = ['RUB', 'USD', 'EUR'] as const;
 export const MAX_ITEM_IMAGES = 5;
 export const MAX_ITEM_LINKS = 5;
 
-/** Приоритет: 3 — очень хочу, 2 — хочу, 1 — было бы неплохо. */
-export const PRIORITIES = [3, 2, 1] as const;
+/** Приоритет желания от 1 (низкий) до 5 (очень высокий). */
+export const MAX_PRIORITY = 5;
 
 /** Только http и https: javascript: и прочие схемы отвергаются. */
 export const httpUrlSchema = z
@@ -39,7 +39,7 @@ export const itemInputSchema = z.object({
   price: price.optional(),
   currency: z.enum(CURRENCIES).optional(),
   url: httpUrlSchema.nullable().optional(),
-  priority: z.number().int().min(1).max(3).optional(),
+  priority: z.number().int().min(1).max(MAX_PRIORITY).optional(),
   links: z
     .array(itemLinkInputSchema)
     .max(MAX_ITEM_LINKS, `Не больше ${MAX_ITEM_LINKS} ссылок`)

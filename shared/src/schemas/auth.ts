@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const RESERVED_USERNAMES = ['admin', 'api', 'root', 'support', 'me', 'wishlist'];
+export const RESERVED_USERNAMES = ['admin', 'api', 'root', 'support', 'me', 'wishlist', 'search'];
 
 /** Имя пользователя: латиница, цифры, _ и точка. Приводится к нижнему регистру. */
 export const usernameSchema = z

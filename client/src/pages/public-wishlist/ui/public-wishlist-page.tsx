@@ -1,8 +1,8 @@
-import { Button, Card, Result, Skeleton, Tag, Typography } from 'antd';
+import { Button, Result, Skeleton, Typography } from 'antd';
 import { ExternalLink } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { UserAvatar } from '@/entities/user';
-import { ItemCover, PRIORITY_LABEL, formatPrice, usePublicWishlist } from '@/entities/wishlist';
+import { ItemTile, usePublicWishlist } from '@/entities/wishlist';
 import { ReserveControls } from '@/features/reserve-item';
 import { EmptyState } from '@/shared/ui';
 
@@ -54,50 +54,35 @@ export function PublicWishlistPage() {
       ) : (
         <ul className="item-grid">
           {items.map((item) => {
-            const price = formatPrice(item.price, item.currency);
-            const taken = item.reservation && item.reservation.status !== 'free';
+            const taken = !!item.reservation && item.reservation.status !== 'free';
             return (
               <li key={item.id} className="item-grid__cell">
-                <Card
-                  size="small"
-                  className={`item-card${taken ? ' is-taken' : ''}`}
-                  cover={<ItemCover images={item.images} alt={item.title} />}
-                >
-                  <Typography.Text strong className="item-card__title">
-                    {item.title}
-                  </Typography.Text>
-                  {item.description && (
-                    <Typography.Paragraph type="secondary" ellipsis={{ rows: 2 }} style={{ margin: '4px 0 0' }}>
-                      {item.description}
-                    </Typography.Paragraph>
-                  )}
-                  {item.note && <Typography.Text type="secondary">{item.note}</Typography.Text>}
-                  <div className="item-card__meta">
-                    {price && <Typography.Text>{price}</Typography.Text>}
-                    <Tag bordered={false}>{PRIORITY_LABEL[item.priority]}</Tag>
-                  </div>
-                  {item.url && (
-                    <a href={item.url} target="_blank" rel="noopener noreferrer nofollow" className="shop-link">
-                      В магазин <ExternalLink size={14} aria-hidden />
-                    </a>
-                  )}
-                  {item.links.length > 0 && (
-                    <ul className="similar-links">
-                      {item.links.map((l) => (
-                        <li key={l.id}>
-                          <a href={l.url} target="_blank" rel="noopener noreferrer nofollow">
-                            {l.label || l.url}
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  {!isOwner && (
-                    <div className="item-card__reserve">
-                      <ReserveControls item={item} slug={slug} />
-                    </div>
-                  )}
-                </Card>
+                <ItemTile
+                  item={item}
+                  dimmed={taken}
+                  footer={
+                    <>
+                      {item.note && <Typography.Text type="secondary">{item.note}</Typography.Text>}
+                      {item.url && (
+                        <a href={item.url} target="_blank" rel="noopener noreferrer nofollow" className="shop-link">
+                          В магазин <ExternalLink size={14} aria-hidden />
+                        </a>
+                      )}
+                      {item.links.length > 0 && (
+                        <ul className="similar-links">
+                          {item.links.map((l) => (
+                            <li key={l.id}>
+                              <a href={l.url} target="_blank" rel="noopener noreferrer nofollow">
+                                {l.label || l.url}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {!isOwner && <ReserveControls item={item} slug={slug} />}
+                    </>
+                  }
+                />
               </li>
             );
           })}

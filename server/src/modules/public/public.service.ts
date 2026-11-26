@@ -24,7 +24,7 @@ export async function getPublicWishlist(
   if (!w || !(await canViewWishlist(viewerId, w))) throw notFound('Вишлист не найден');
 
   const isOwner = viewerId === w.ownerId;
-  const items = sortItems(w.items, w.sortMode).map((item) => {
+  const items = sortItems(w.items, w.sortMode, w.sortDir).map((item) => {
     const dto = toItemDto(item);
     if (isOwner) return dto;
     const r = item.reservation;
@@ -44,6 +44,7 @@ export async function getPublicWishlist(
       description: w.description,
       eventDate: w.eventDate ? w.eventDate.toISOString().slice(0, 10) : null,
       sortMode: w.sortMode,
+      sortDir: w.sortDir,
     },
     owner: w.owner,
     isOwner,

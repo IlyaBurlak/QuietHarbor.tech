@@ -35,7 +35,7 @@
     "prod:down": "docker compose --env-file .env.production -f compose.prod.yml down",
     "prod:migrate": "docker compose --env-file .env.production -f compose.prod.yml run --rm --build migrate",
     "prod:logs": "docker compose --env-file .env.production -f compose.prod.yml logs -f --tail=100",
-    "prod:create-admin": "docker compose --env-file .env.production -f compose.prod.yml exec server node dist/scripts/create-admin.js",
+    "prod:create-admin": "docker compose --env-file .env.production -f compose.prod.yml --profile tools run --rm create-admin",
     "prod:reset-link": "docker compose --env-file .env.production -f compose.prod.yml exec server node dist/scripts/create-reset-link.js"
   },
   "devDependencies": {
@@ -50,6 +50,8 @@
   },
   "type": "module",
   "overrides": {
-    "esbuild": "0.28.2"
+    "esbuild": "0.28.2",
+    "effect": "^3.22.5",
+    "deepmerge-ts": "^8.0.2"
   }
 }

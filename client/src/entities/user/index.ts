@@ -11,3 +11,4 @@ export {
 } from './api/users-api';
 export { UsernameStatusIcon, usernameFieldState } from './ui/username-status';
 export { UserAvatar } from './ui/user-avatar';
+export { useHomeSettings, useSaveHomeSettings, HOME_SETTINGS_KEY } from './model/use-home-settings';

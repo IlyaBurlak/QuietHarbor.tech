@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { updateItemSchema } from '@wishlist/shared';
 import { requireAuth } from '../../core/middleware/auth';
+import { uploadLimiter } from '../../core/middleware/rate-limits';
 import { validate } from '../../core/middleware/validate';
 import { uploadSingle } from '../files/upload';
 import * as service from './items.service';
@@ -19,7 +20,7 @@ itemsRouter.delete('/:id', async (req, res) => {
   res.status(204).end();
 });
 
-itemsRouter.post('/:id/images', uploadSingle, async (req, res) => {
+itemsRouter.post('/:id/images', uploadLimiter, uploadSingle, async (req, res) => {
   res.status(201).json({ item: await service.addImage(req.user!.id, p(req.params.id), req.file) });
 });
 

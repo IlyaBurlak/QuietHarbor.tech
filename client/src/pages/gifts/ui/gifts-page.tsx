@@ -1,7 +1,7 @@
-import { Button, Card, Result, Skeleton, Tag, Typography } from 'antd';
+import { Button, Result, Skeleton, Tag } from 'antd';
 import { Link } from 'react-router-dom';
 import { UserAvatar } from '@/entities/user';
-import { ItemCover, formatPrice, useMyReservations } from '@/entities/wishlist';
+import { ItemTile, useMyReservations } from '@/entities/wishlist';
 import { EmptyState, PageHeader } from '@/shared/ui';
 
 export function GiftsPage() {
@@ -34,15 +34,14 @@ export function GiftsPage() {
           <ul className="item-grid">
             {g.items.map((item) => (
               <li key={item.id} className="item-grid__cell">
-                <Card size="small" className="item-card" cover={<ItemCover images={item.images} alt={item.title} />}>
-                  <Typography.Text strong>{item.title}</Typography.Text>
-                  <div className="item-card__meta">
-                    <Typography.Text>{formatPrice(item.price, item.currency)}</Typography.Text>
+                <ItemTile
+                  item={item}
+                  footer={
                     <Tag color={item.status === 'bought' ? 'green' : 'blue'} bordered={false}>
                       {item.status === 'bought' ? 'Куплено' : 'Забронировано'}
                     </Tag>
-                  </div>
-                </Card>
+                  }
+                />
               </li>
             ))}
           </ul>

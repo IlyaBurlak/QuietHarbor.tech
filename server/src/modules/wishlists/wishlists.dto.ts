@@ -9,6 +9,7 @@ export const toWishlistDto = (w: Wishlist, itemsCount: number): WishlistDto => (
   description: w.description,
   visibility: w.visibility,
   sortMode: w.sortMode,
+  sortDir: w.sortDir,
   eventDate: dateOnly(w.eventDate),
   shareSlug: w.shareSlug,
   itemsCount,

@@ -1,0 +1,1 @@
+ALTER TABLE "User" ADD COLUMN "homeHidden" TEXT[] DEFAULT ARRAY[]::TEXT[];

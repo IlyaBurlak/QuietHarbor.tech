@@ -62,20 +62,22 @@ export function PhotoUploader({ photos, busy, onAdd, onRemove, onMain }: Props) 
         onDrop={onDrop}
       >
         <ImagePlus size={24} aria-hidden />
-        <span>Перетащите фото сюда или</span>
+        <span>Перетащите фото сюда</span>
         <Button
           onClick={() => input.current?.click()}
           disabled={photos.length >= MAX_ITEM_IMAGES}
           loading={busy}
         >
-          Выбрать файлы
+          Выбрать с устройства
         </Button>
         <input
           ref={input}
           type="file"
           accept={TYPES.join(',')}
           multiple
-          hidden
+          className="visually-hidden"
+          tabIndex={-1}
+          aria-hidden
           onChange={(e) => {
             if (e.target.files) accept(e.target.files);
             e.target.value = '';

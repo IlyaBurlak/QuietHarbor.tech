@@ -10,6 +10,7 @@ export const creds = {
 };
 
 export async function cleanDb() {
+  await prisma.adminAuditLog.deleteMany();
   await prisma.passwordResetRequest.deleteMany();
   await prisma.friendship.deleteMany();
   await prisma.group.deleteMany();

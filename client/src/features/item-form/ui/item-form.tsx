@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, App, Button, Form, Input, InputNumber, Radio, Select } from 'antd';
+import { Alert, App, Button, Form, Input, InputNumber, Rate, Select } from 'antd';
 import { Plus, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -30,7 +30,7 @@ const formSchema = itemInputSchema
     note: z.string().trim().max(300, 'Не длиннее 300 символов'),
     price: z.number().min(0, 'Цена не может быть отрицательной').nullable(),
     currency: z.enum(CURRENCIES),
-    priority: z.number().int().min(1).max(3),
+    priority: z.number().int().min(1).max(5),
     url: z.union([z.literal(''), httpUrlSchema]),
     links: z
       .array(z.object({ url: httpUrlSchema, label: z.string().trim().max(100, 'Не длиннее 100 символов') }))
@@ -69,7 +69,7 @@ export function ItemForm({ wishlistId, item }: Props) {
       note: item?.note ?? '',
       price: item?.price ? Number(item.price) : null,
       currency: (item?.currency as Values['currency']) ?? 'RUB',
-      priority: item?.priority ?? 2,
+      priority: item?.priority ?? 3,
       url: item?.url ?? '',
       links: item?.links.map((l) => ({ url: l.url, label: l.label ?? '' })) ?? [],
     },
@@ -242,13 +242,11 @@ export function ItemForm({ wishlistId, item }: Props) {
         name="priority"
         control={control}
         render={({ field }) => (
-          <Form.Item label="Насколько хочется">
-            <Radio.Group
-              {...field}
-              optionType="button"
-              buttonStyle="solid"
-              options={[3, 2, 1].map((v) => ({ value: v, label: PRIORITY_LABEL[v] }))}
-            />
+          <Form.Item
+            label="Насколько хочется"
+            extra={PRIORITY_LABEL[field.value]}
+          >
+            <Rate value={field.value} onChange={(v) => field.onChange(v || 1)} allowClear={false} />
           </Form.Item>
         )}
       />

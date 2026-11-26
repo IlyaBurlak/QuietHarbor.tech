@@ -5,6 +5,7 @@ import { Alert, Button, Form, Input } from 'antd';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { loginSchema, type LoginInput } from '@wishlist/shared';
 import { loginRequest, useSetCurrentUser } from '@/entities/user';
+import { toApiError, usePublicConfig } from '@/shared/api';
 import { applyApiError } from '@/shared/lib';
 
 export function LoginForm() {
@@ -12,6 +13,8 @@ export function LoginForm() {
   const location = useLocation();
   const setUser = useSetCurrentUser();
   const [formError, setFormError] = useState<string | null>(null);
+  const [blocked, setBlocked] = useState(false);
+  const { data: config } = usePublicConfig();
   const from = (location.state as { from?: string } | null)?.from ?? '/';
 
   const {
@@ -26,17 +29,43 @@ export function LoginForm() {
 
   const onSubmit = handleSubmit(async (values) => {
     setFormError(null);
+    setBlocked(false);
     try {
       const user = await loginRequest(values);
       setUser(user);
       navigate(from, { replace: true });
     } catch (e) {
+      if (toApiError(e).code === 'ACCOUNT_BLOCKED') {
+        setBlocked(true);
+        return;
+      }
       setFormError(applyApiError(e, setError, ['username', 'password']));
     }
   });
 
   return (
     <Form layout="vertical" onFinish={onSubmit} requiredMark={false} noValidate>
+      {blocked && (
+        <Alert
+          type="error"
+          showIcon
+          message="Аккаунт заблокирован"
+          description={
+            config?.supportContactUrl ? (
+              <>
+                Если это ошибка, напишите администратору:{' '}
+                <a href={config.supportContactUrl} target="_blank" rel="noreferrer">
+                  связаться
+                </a>
+              </>
+            ) : (
+              'Если это ошибка, свяжитесь с администратором.'
+            )
+          }
+          style={{ marginBottom: 16 }}
+          role="alert"
+        />
+      )}
       {formError && (
         <Alert
           type="error"

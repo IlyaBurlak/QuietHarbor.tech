@@ -177,3 +177,26 @@ describe('публичные настройки', () => {
     expect(Object.keys(res.body)).toEqual(['supportContactUrl']);
   });
 });
+
+describe('настройка главной страницы', () => {
+  it('требует вход', async () => {
+    expect((await request(app).get('/api/users/me/home')).status).toBe(401);
+    expect((await request(app).put('/api/users/me/home').send({ hidden: [] })).status).toBe(401);
+  });
+
+  it('по умолчанию всё включено; скрытые блоки сохраняются и у каждого свои', async () => {
+    const agent = await signedInAgent(app);
+    const other = await signedInAgent(app, { username: 'other' });
+    expect((await agent.get('/api/users/me/home')).body).toEqual({ hidden: [] });
+    const saved = await agent.put('/api/users/me/home').send({ hidden: ['stats', 'events', 'stats'] });
+    expect(saved.body).toEqual({ hidden: ['stats', 'events'] });
+    expect((await agent.get('/api/users/me/home')).body.hidden).toEqual(['stats', 'events']);
+    expect((await other.get('/api/users/me/home')).body.hidden).toEqual([]);
+  });
+
+  it('отвергает неизвестные блоки', async () => {
+    const agent = await signedInAgent(app);
+    expect((await agent.put('/api/users/me/home').send({ hidden: ['hack'] })).status).toBe(400);
+    expect((await agent.put('/api/users/me/home').send({})).status).toBe(400);
+  });
+});

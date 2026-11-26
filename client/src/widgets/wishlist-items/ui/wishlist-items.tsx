@@ -15,14 +15,12 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { App, Button, Card, Dropdown, Tag, Typography } from 'antd';
+import { App, Dropdown } from 'antd';
 import { GripVertical, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import type { WishlistItemDto } from '@wishlist/shared';
 import {
-  ItemCover,
-  PRIORITY_LABEL,
-  formatPrice,
+  ItemTile,
   useDeleteItem,
   useReorder,
 } from '@/entities/wishlist';
@@ -43,7 +41,6 @@ function ItemCard({
     id: item.id,
     disabled: !draggable,
   });
-  const price = formatPrice(item.price, item.currency);
 
   const confirmDelete = () =>
     modal.confirm({
@@ -58,6 +55,39 @@ function ItemCard({
       },
     });
 
+  const tools = (
+    <>
+      {draggable && (
+        <button
+          type="button"
+          className="tile__btn"
+          aria-label={`Переместить «${item.title}»`}
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical size={16} aria-hidden />
+        </button>
+      )}
+      <Dropdown
+        trigger={['click']}
+        menu={{
+          items: [
+            { key: 'edit', icon: <Pencil size={14} />, label: 'Изменить' },
+            { key: 'delete', icon: <Trash2 size={14} />, label: 'Удалить', danger: true },
+          ],
+          onClick: ({ key }) => {
+            if (key === 'edit') navigate(`/lists/${wishlistId}/items/${item.id}/edit`);
+            if (key === 'delete') confirmDelete();
+          },
+        }}
+      >
+        <button type="button" className="tile__btn" aria-label={`Действия с «${item.title}»`}>
+          <MoreHorizontal size={16} aria-hidden />
+        </button>
+      </Dropdown>
+    </>
+  );
+
   return (
     <li
       ref={setNodeRef}
@@ -68,54 +98,7 @@ function ItemCard({
         opacity: isDragging ? 0.6 : 1,
       }}
     >
-      <Card
-        size="small"
-        className="item-card"
-        cover={<ItemCover images={item.images} alt={item.title} />}
-      >
-        <div className="item-card__head">
-          <Link to={`/lists/${wishlistId}/items/${item.id}`} className="item-card__title">
-            {item.title}
-          </Link>
-          <div className="item-card__tools">
-            {draggable && (
-              <button
-                type="button"
-                className="drag-handle"
-                aria-label={`Переместить «${item.title}»`}
-                {...attributes}
-                {...listeners}
-              >
-                <GripVertical size={16} aria-hidden />
-              </button>
-            )}
-            <Dropdown
-              trigger={['click']}
-              menu={{
-                items: [
-                  { key: 'edit', icon: <Pencil size={14} />, label: 'Изменить' },
-                  { key: 'delete', icon: <Trash2 size={14} />, label: 'Удалить', danger: true },
-                ],
-                onClick: ({ key }) => {
-                  if (key === 'edit') navigate(`/lists/${wishlistId}/items/${item.id}/edit`);
-                  if (key === 'delete') confirmDelete();
-                },
-              }}
-            >
-              <Button
-                type="text"
-                size="small"
-                aria-label={`Действия с «${item.title}»`}
-                icon={<MoreHorizontal size={16} aria-hidden />}
-              />
-            </Dropdown>
-          </div>
-        </div>
-        <div className="item-card__meta">
-          {price ? <Typography.Text>{price}</Typography.Text> : <span />}
-          <Tag bordered={false}>{PRIORITY_LABEL[item.priority] ?? 'Хочу'}</Tag>
-        </div>
-      </Card>
+      <ItemTile item={item} href={`/lists/${wishlistId}/items/${item.id}`} tools={tools} />
     </li>
   );
 }
