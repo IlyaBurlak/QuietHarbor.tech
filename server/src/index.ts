@@ -3,7 +3,7 @@ import { createApp } from './app';
 import { prisma } from './core/db/prisma';
 import { logger } from './core/http/logger';
 
-createApp().listen(env.SERVER_PORT, () => {
+createApp().listen({ port: env.SERVER_PORT, host: env.SERVER_HOST }, () => {
   logger.info(`API запущен: http://localhost:${env.SERVER_PORT}/api`);
 });
 

@@ -21,15 +21,16 @@ npm run dev
 
 ## Запуск на сервере
 
-В пустом каталоге на сервере с Docker запустите установщик:
+На Linux с Docker запустите готовый образ. PostgreSQL, API и фронтенд уже внутри.
 
 ```bash
-docker run --rm -it \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  -v "$PWD:/config" \
-  ghcr.io/ilyaburlak/quietharbor/installer:0.2.0
+docker run -d --name quietharbor --restart unless-stopped \
+  -p 127.0.0.1:8080:80 -v quietharbor:/var/lib/postgresql/data \
+  ghcr.io/ilyaburlak/quietharbor:0.2.1
 ```
 
-В меню выберите локальный адрес или домен, задайте учётную запись администратора и при необходимости включите резервные копии. Для ручного запуска скопируйте [.env.production.example](.env.production.example) в `.env.production`, задайте домен, `CLIENT_URL`, пароль PostgreSQL и `SESSION_SECRET`, затем выполните `npm run prod:up`. Управление копиями и восстановление описаны в [инструкции по резервному копированию](deploy/README.md).
+Сайт откроется на <http://localhost:8080>. Для домена укажите `-e SITE_ADDRESS=example.com` и опубликуйте порты `80:80` и `443:443`. Откройте их на сервере и направьте DNS домена на него. Для другого локального порта задайте `CLIENT_URL` с этим портом.
+
+Создайте администратора командой `docker exec -it quietharbor quietharbor create-admin`. Данные, фото и сертификаты хранятся в томе `quietharbor`. Настройки бэкапов и обновление описаны в [инструкции по эксплуатации](deploy/README.md).
 
 Лицензия [MIT](LICENSE).
