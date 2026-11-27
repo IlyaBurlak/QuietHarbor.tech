@@ -31,6 +31,7 @@ export {
 export { reserveRequest, releaseRequest, boughtRequest } from './api/wishlist-api';
 export { formatPrice } from './lib/format';
 export { ItemTile } from './ui/item-tile';
+export { ItemDetails } from './ui/item-details';
 export { PriorityStars } from './ui/priority-stars';
 export { ItemCover } from './ui/item-cover';
 export { uploadImageRequest } from './api/wishlist-api';

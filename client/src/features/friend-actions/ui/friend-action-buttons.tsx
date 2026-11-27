@@ -55,7 +55,7 @@ export function FriendActionButtons({ relation, username, userId, requestId, siz
       );
     case 'incoming':
       return (
-        <Space wrap>
+        <Space size={12} wrap>
           <Button
             type="primary"
             size={size}

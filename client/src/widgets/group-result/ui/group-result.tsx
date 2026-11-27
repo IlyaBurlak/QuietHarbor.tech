@@ -1,18 +1,21 @@
-import { Button, Card, Result, Skeleton, Typography } from 'antd';
-import { Gift } from 'lucide-react';
+import { useState } from 'react';
+import { Button, Card, Modal, Result, Skeleton, Typography } from 'antd';
+import { ArrowUpRight, Gift } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { GroupDetail } from '@wishlist/shared';
 import { PersonRow } from '@/entities/friend';
 import { useMyRecipient } from '@/entities/group';
-import { ItemTile } from '@/entities/wishlist';
+import { ItemDetails, ItemTile } from '@/entities/wishlist';
 import { MyWishlistSelect } from '@/features/group-my-wishlist';
 
 /** Страница группы после жеребьёвки: «Вы дарите …» и вишлист получателя. */
 export function GroupResult({ group }: { group: GroupDetail }) {
   const { data, isPending, isError, refetch } = useMyRecipient(group.id, true);
+  const [openedItemId, setOpenedItemId] = useState<string | null>(null);
+  const openedItem = data?.wishlist?.items.find(({ id }) => id === openedItemId);
 
   return (
-    <div className="group-sections">
+    <div className="group-sections group-result">
       {isPending && <Skeleton active paragraph={{ rows: 3 }} />}
       {isError && (
         <Result
@@ -54,17 +57,16 @@ export function GroupResult({ group }: { group: GroupDetail }) {
             <p className="muted">В вишлисте пока нет желаний.</p>
           )}
           {data.wishlist && data.wishlist.items.length > 0 && (
-            <ul className="item-grid">
+            <ul className="item-grid group-result__items">
               {data.wishlist.items.map((item) => (
                 <li key={item.id} className="item-grid__cell">
                   <ItemTile
                     item={item}
+                    onOpen={() => setOpenedItemId(item.id)}
                     footer={
-                      item.url ? (
-                        <a href={item.url} target="_blank" rel="noopener noreferrer nofollow">
-                          В магазин
-                        </a>
-                      ) : undefined
+                      <span className="group-result__open" aria-hidden>
+                        Подробнее <ArrowUpRight size={16} />
+                      </span>
                     }
                   />
                 </li>
@@ -74,9 +76,22 @@ export function GroupResult({ group }: { group: GroupDetail }) {
         </section>
       )}
 
-      <Card title="Мой вишлист для моего Санты">
+      <Card className="group-result__own-list" title="Мой вишлист для моего Санты">
         <MyWishlistSelect groupId={group.id} value={group.myWishlistId} />
       </Card>
+
+      <Modal
+        open={!!openedItem}
+        title={openedItem?.title}
+        onCancel={() => setOpenedItemId(null)}
+        className="gift-detail-dialog"
+        width={880}
+        centered
+        footer={null}
+        destroyOnHidden
+      >
+        {openedItem && <ItemDetails key={openedItem.id} item={openedItem} />}
+      </Modal>
     </div>
   );
 }

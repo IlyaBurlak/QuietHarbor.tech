@@ -1,10 +1,10 @@
-import { Avatar } from 'antd';
+import { Avatar, type AvatarProps } from 'antd';
 import { fileUrl } from '@/shared/lib';
 
 interface Props {
   fullName: string;
   avatarKey: string | null;
-  size?: number | 'small' | 'large' | 'default';
+  size?: AvatarProps['size'];
 }
 
 const PALETTE = [

@@ -17,7 +17,7 @@ export function PageHeader({ title, count, description, actions }: Props) {
           {title}
           {count !== undefined && <span className="page-title__count">{count}</span>}
         </h1>
-        {description && <p className="page-header__desc">{description}</p>}
+        {description && <div className="page-header__desc">{description}</div>}
       </div>
       {actions && <div className="page-header__actions">{actions}</div>}
     </header>

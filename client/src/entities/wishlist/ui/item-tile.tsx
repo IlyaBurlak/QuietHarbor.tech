@@ -9,6 +9,7 @@ interface Props {
   item: WishlistItemDto;
   /** Если задан, вся карточка — ссылка. */
   href?: string;
+  onOpen?: () => void;
   /** Кнопки поверх фото (меню, перетаскивание). */
   tools?: ReactNode;
   /** Блок под карточкой (например, бронь). */
@@ -17,12 +18,16 @@ interface Props {
 }
 
 /** Карточка товара: крупное фото, ниже название, цена и приоритет. */
-export function ItemTile({ item, href, tools, footer, dimmed }: Props) {
+export function ItemTile({ item, href, onOpen, tools, footer, dimmed }: Props) {
   const price = formatPrice(item.price, item.currency);
   const title = href ? (
     <Link to={href} className="tile__link">
       {item.title}
     </Link>
+  ) : onOpen ? (
+    <button type="button" className="tile__link" aria-haspopup="dialog" onClick={onOpen}>
+      {item.title}
+    </button>
   ) : (
     item.title
   );

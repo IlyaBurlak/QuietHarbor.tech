@@ -78,7 +78,7 @@ export function AvatarEditor({ profile, size = 96 }: { profile: Profile; size?: 
         aria-hidden
         onChange={(e) => void onPick(e.target.files?.[0])}
       />
-      <Space wrap style={{ justifyContent: 'center' }}>
+      <Space size={12} wrap style={{ justifyContent: 'center' }}>
         <Button icon={<CameraOutlined />} loading={busy} onClick={() => input.current?.click()}>
           {profile.avatarKey ? 'Заменить фото' : 'Загрузить фото'}
         </Button>

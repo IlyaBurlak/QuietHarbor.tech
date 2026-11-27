@@ -81,7 +81,7 @@ export function HomePage() {
         <Stat to="/lists" icon={<Heart size={20} aria-hidden />} value={wishlists.data ? lists.length : '…'} label="вишлистов" />
         <Stat to="/lists" icon={<Gift size={20} aria-hidden />} value={wishlists.data ? wishesCount : '…'} label="желаний" />
         <Stat to="/friends" icon={<Users size={20} aria-hidden />} value={friends.data ? friends.data.friends.length : '…'} label="друзей" />
-        <Stat to="/gifts" icon={<CalendarHeart size={20} aria-hidden />} value={reservedCount ?? '…'} label="забронировано мной" />
+        <Stat to="/gifts" icon={<CalendarHeart size={20} aria-hidden />} value={reservedCount ?? '…'} label="мои брони" />
       </div>
       )}
 
@@ -95,7 +95,7 @@ export function HomePage() {
         </Link>
       )}
 
-      <div className={`home-grid${showSide ? '' : ' home-grid--single'}`}>
+      <div className={`home-grid${showMain && showSide ? '' : ' home-grid--single'}`}>
         {showMain && (
         <div className="home-grid__main">
           {show('wishlists') && (

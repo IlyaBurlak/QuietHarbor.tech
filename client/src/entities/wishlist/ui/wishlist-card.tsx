@@ -19,11 +19,20 @@ const plural = (n: number) =>
       : 'желаний';
 
 /** Карточка вишлиста: название, число товаров, приватность и действия справа. */
-export function WishlistCard({ wishlist, actions }: { wishlist: WishlistDto; actions?: ReactNode }) {
+export function WishlistCard({
+  wishlist,
+  actions,
+  href = `/lists/${wishlist.id}`,
+}: {
+  wishlist: Pick<WishlistDto, 'id' | 'title' | 'description' | 'eventDate' | 'itemsCount'> &
+    Partial<Pick<WishlistDto, 'visibility'>>;
+  actions?: ReactNode;
+  href?: string;
+}) {
   return (
     <Card className="wishlist-card" hoverable>
       <div className="wishlist-card__head">
-        <Link to={`/lists/${wishlist.id}`} className="wishlist-card__title">
+        <Link to={href} className="wishlist-card__title">
           {wishlist.title}
         </Link>
         {actions}
@@ -34,9 +43,11 @@ export function WishlistCard({ wishlist, actions }: { wishlist: WishlistDto; act
         </Typography.Paragraph>
       )}
       <div className="wishlist-card__meta">
-        <Tag bordered={false} icon={ICONS[wishlist.visibility]}>
-          {VISIBILITY_LABEL[wishlist.visibility]}
-        </Tag>
+        {wishlist.visibility && (
+          <Tag bordered={false} icon={ICONS[wishlist.visibility]}>
+            {VISIBILITY_LABEL[wishlist.visibility]}
+          </Tag>
+        )}
         <Typography.Text type="secondary">
           {wishlist.itemsCount} {plural(wishlist.itemsCount)}
         </Typography.Text>
