@@ -1,4 +1,4 @@
-import { Router, type Response } from 'express';
+import { Router, type Request, type Response } from 'express';
 import {
   adminPageSchema,
   adminResetQuerySchema,
@@ -6,7 +6,7 @@ import {
   blockUserSchema,
   loginSchema,
 } from '@wishlist/shared';
-import { env } from '../../config/env';
+import { secureSessionCookie } from '../../core/http/session-cookie';
 import { requireAdmin } from '../../core/middleware/admin';
 import { adminLoginLimiter } from '../../core/middleware/rate-limits';
 import { validate } from '../../core/middleware/validate';
@@ -15,28 +15,28 @@ import * as service from './admin.service';
 
 export const adminRouter = Router();
 
-const cookieOptions = {
+const cookieOptions = (req: Request) => ({
   httpOnly: true,
   sameSite: 'strict',
-  secure: env.NODE_ENV === 'production',
+  secure: secureSessionCookie(req),
   path: '/api/admin',
-} as const;
+}) as const;
 
-const setCookie = (res: Response, token: string) =>
-  res.cookie(ADMIN_SESSION_COOKIE, token, { ...cookieOptions, maxAge: service.ADMIN_SESSION_TTL_MS });
+const setCookie = (req: Request, res: Response, token: string) =>
+  res.cookie(ADMIN_SESSION_COOKIE, token, { ...cookieOptions(req), maxAge: service.ADMIN_SESSION_TTL_MS });
 
 const p = (v: string | string[] | undefined) => String(v);
 
 adminRouter.post('/auth/login', adminLoginLimiter, validate(loginSchema), async (req, res) => {
   const { user, token } = await service.login(req.body.username, req.body.password);
-  setCookie(res, token);
+  setCookie(req, res, token);
   res.json({ user });
 });
 
 adminRouter.post('/auth/logout', async (req, res) => {
   const token = req.cookies?.[ADMIN_SESSION_COOKIE];
   if (typeof token === 'string' && token) await service.logout(token);
-  res.clearCookie(ADMIN_SESSION_COOKIE, cookieOptions);
+  res.clearCookie(ADMIN_SESSION_COOKIE, cookieOptions(req));
   res.status(204).end();
 });
 

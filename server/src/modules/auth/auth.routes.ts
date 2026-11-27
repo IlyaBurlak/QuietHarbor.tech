@@ -1,4 +1,4 @@
-import { Router, type Response } from 'express';
+import { Router, type Request, type Response } from 'express';
 import {
   loginSchema,
   passwordResetRequestSchema,
@@ -6,7 +6,7 @@ import {
   resetPasswordSchema,
   usernameAvailabilitySchema,
 } from '@wishlist/shared';
-import { env } from '../../config/env';
+import { secureSessionCookie } from '../../core/http/session-cookie';
 import {
   authLimiter,
   availabilityLimiter,
@@ -20,15 +20,15 @@ import { destroySession, SESSION_COOKIE, SESSION_TTL_MS } from './session.servic
 
 export const authRouter = Router();
 
-const cookieOptions = {
+const cookieOptions = (req: Request) => ({
   httpOnly: true,
   sameSite: 'lax',
-  secure: env.NODE_ENV === 'production',
+  secure: secureSessionCookie(req),
   path: '/',
-} as const;
+}) as const;
 
-const setSessionCookie = (res: Response, token: string) =>
-  res.cookie(SESSION_COOKIE, token, { ...cookieOptions, maxAge: SESSION_TTL_MS });
+const setSessionCookie = (req: Request, res: Response, token: string) =>
+  res.cookie(SESSION_COOKIE, token, { ...cookieOptions(req), maxAge: SESSION_TTL_MS });
 
 authRouter.get(
   '/username-available',
@@ -42,20 +42,20 @@ authRouter.get(
 
 authRouter.post('/register', authLimiter, validate(registerSchema), async (req, res) => {
   const { user, token } = await authService.register(req.body);
-  setSessionCookie(res, token);
+  setSessionCookie(req, res, token);
   res.status(201).json({ user });
 });
 
 authRouter.post('/login', authLimiter, validate(loginSchema), async (req, res) => {
   const { user, token } = await authService.login(req.body);
-  setSessionCookie(res, token);
+  setSessionCookie(req, res, token);
   res.json({ user });
 });
 
 authRouter.post('/logout', async (req, res) => {
   const token = req.cookies?.[SESSION_COOKIE];
   if (typeof token === 'string' && token) await destroySession(token);
-  res.clearCookie(SESSION_COOKIE, cookieOptions);
+  res.clearCookie(SESSION_COOKIE, cookieOptions(req));
   res.status(204).end();
 });
 
