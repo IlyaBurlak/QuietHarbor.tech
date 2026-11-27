@@ -1,0 +1,166 @@
+# Прод-стек: Caddy (HTTPS, фронтенд, раздача фото) + бэкенд + база + разовые миграции.
+# Запуск из корня: npm run prod:up. Переменные берутся из .env.production (шаблон — .env.production.example).
+name: wishlist-prod
+
+# Ротация логов Docker: без этого json-логи растут бесконечно и забивают диск
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '3'
+
+services:
+  db:
+    logging: *default-logging
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?задайте POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?задайте POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:?задайте POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    # Порт наружу не публикуется: к базе ходит только бэкенд внутри сети compose
+
+  migrate:
+    image: ${QH_IMAGE_PREFIX:-quietharbor}/migrate:${QH_IMAGE_TAG:-0.2.0}
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: deploy/server.Dockerfile
+      target: migrate
+    restart: 'no'
+    environment:
+      DATABASE_URL: &database_url postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+
+  server:
+    logging: *default-logging
+    image: ${QH_IMAGE_PREFIX:-quietharbor}/server:${QH_IMAGE_TAG:-0.2.0}
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: deploy/server.Dockerfile
+      target: runtime
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: *database_url
+      SERVER_PORT: 3000
+      TRUST_PROXY: 1 # перед сервером стоит Caddy
+      CLIENT_URL: ${CLIENT_URL:?задайте CLIENT_URL}
+      SESSION_SECRET: ${SESSION_SECRET:?задайте SESSION_SECRET}
+      UPLOADS_DIR: /data/uploads
+      SUPPORT_CONTACT_URL: ${SUPPORT_CONTACT_URL:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+    volumes:
+      - uploads:/data/uploads
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # Разовая задача: создать/обновить администратора (npm run prod:create-admin).
+  # Пароль админа доступен только этому контейнеру, а не работающему серверу.
+  create-admin:
+    profiles: [tools]
+    image: ${QH_IMAGE_PREFIX:-quietharbor}/server:${QH_IMAGE_TAG:-0.2.0}
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: deploy/server.Dockerfile
+      target: runtime
+    restart: 'no'
+    command: ['node', 'dist/scripts/create-admin.js']
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: *database_url
+      CLIENT_URL: ${CLIENT_URL:?задайте CLIENT_URL}
+      SESSION_SECRET: ${SESSION_SECRET:?задайте SESSION_SECRET}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  caddy:
+    logging: *default-logging
+    image: ${QH_IMAGE_PREFIX:-quietharbor}/web:${QH_IMAGE_TAG:-0.2.0}
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: deploy/web.Dockerfile
+    restart: unless-stopped
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-http://localhost}
+    ports:
+      - '${PUBLISH_HOST:-0.0.0.0}:${HTTP_PORT:-80}:80'
+      - '${PUBLISH_HOST:-0.0.0.0}:${HTTPS_PORT:-443}:443'
+    volumes:
+      # Тот же том, что у бэкенда, но только для чтения: фото отдаёт Caddy
+      - uploads:/data/uploads:ro
+      - caddy_data:/data # сертификаты: не удалять, иначе придётся получать заново
+      - caddy_config:/config
+    depends_on:
+      server:
+        condition: service_healthy
+
+  backup:
+    profiles: [backup]
+    logging: *default-logging
+    image: ${QH_IMAGE_PREFIX:-quietharbor}/backup:${QH_IMAGE_TAG:-0.2.0}
+    build:
+      context: .
+      dockerfile: deploy/backup.Dockerfile
+    init: true
+    restart: unless-stopped
+    environment:
+      PGHOST: db
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+      PGCONNECT_TIMEOUT: 10
+      BACKUP_SCHEDULE: ${BACKUP_SCHEDULE:-03:00}
+      BACKUP_TIME_ZONE: ${BACKUP_TIME_ZONE:-Europe/Moscow}
+      RESTIC_REPOSITORY: /backup/repository
+      RESTIC_PASSWORD_FILE: /config/.env.backup-key
+    volumes:
+      - uploads:/data/uploads:ro
+      - type: bind
+        source: ${BACKUP_CONFIG_DIR:-.}
+        target: /config
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${BACKUP_DIRECTORY:-./backups}
+        target: /backup
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  pgdata:
+  uploads:
+  caddy_data:
+  caddy_config:

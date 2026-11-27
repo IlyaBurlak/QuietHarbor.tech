@@ -1,0 +1,12 @@
+{
+  "name": "quietharbor-installer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Установщик и консольное меню настройки QuietHarbor (без внешних зависимостей)",
+  "bin": { "quietharbor": "bin/quietharbor.mjs" },
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "node --test"
+  }
+}

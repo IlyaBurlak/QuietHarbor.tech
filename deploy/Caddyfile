@@ -1,0 +1,49 @@
+# SITE_ADDRESS: домен (example.com) — Caddy сам получит HTTPS-сертификат;
+# http://localhost — для проверки на своём компьютере без HTTPS.
+{$SITE_ADDRESS:http://localhost} {
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		X-Frame-Options DENY
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+		Cross-Origin-Opener-Policy same-origin
+		# Строгий CSP: скрипты только свои. style 'unsafe-inline' нужен Ant Design (стили в атрибутах)
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+		# HSTS браузер учитывает только по HTTPS, поэтому локально по http он безвреден
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+
+	# Фото отдаёт сам Caddy прямо из тома, не трогая Node. Имена случайные и не меняются,
+	# поэтому кеш на год. Строгий шаблон имени не даёт выйти за пределы папки.
+	# Если файла нет, Caddy отвечает 404 (как и Node).
+	@photo path_regexp photo ^/api/files/([a-f0-9]{32}\.webp)$
+	handle @photo {
+		rewrite * /{re.photo.1}
+		root * /data/uploads
+		header Content-Type image/webp
+		header Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
+
+	handle /api/* {
+		# Фото до 5 МБ, остальное — маленький JSON: больше 6 МБ даже не пускаем к Node
+		request_body {
+			max_size 6MB
+		}
+		reverse_proxy server:3000
+	}
+
+	handle {
+		root * /srv/www
+		# Файлы сборки с хэшем в имени не меняются — кешируем на год, страницу — нет
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		@page not path /assets/*
+		header @page Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+}

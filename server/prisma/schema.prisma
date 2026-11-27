@@ -41,6 +41,30 @@ enum WishlistVisibility {
   friends
 }
 
+enum WishlistSort {
+  manual
+  priority
+  price
+}
+
+enum SortDir {
+  asc
+  desc
+}
+
+enum NotificationType {
+  friend_request
+  friend_accepted
+  group_joined
+  group_drawn
+}
+
+/// Обычная сессия (30 дней) или админская (2 часа, отдельный cookie).
+enum SessionKind {
+  user
+  admin
+}
+
 enum ReservationStatus {
   reserved
   bought
@@ -58,8 +82,10 @@ enum GroupStatus {
 
 model User {
   id                 String             @id @default(cuid())
-  nickname           String?            @unique
+  username           String?            @unique
   passwordHash       String?
+  firstName          String
+  lastName           String
   fullName           String
   role               Role               @default(user)
   status             UserStatus         @default(active)
@@ -72,10 +98,13 @@ model User {
   hideBirthYear      Boolean            @default(false)
   birthdayVisibility BirthdayVisibility @default(friends)
   bio                String?
-  nicknameChangedAt  DateTime?
+  usernameChangedAt  DateTime?
+  /// Скрытые пользователем блоки главной страницы
+  homeHidden         String[]           @default([])
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
+  sessions            Session[]
   identities          AuthIdentity[]
   wishlists           Wishlist[]
   reservations        Reservation[]
@@ -85,6 +114,8 @@ model User {
   memberships         GroupMember[]
   givenAssignments    Assignment[]           @relation("Giver")
   receivedAssignments Assignment[]           @relation("Receiver")
+  notifications       Notification[]         @relation("NotificationOwner")
+  caused              Notification[]         @relation("NotificationActor")
   resetRequests       PasswordResetRequest[] @relation("ResetTarget")
   handledResets       PasswordResetRequest[] @relation("ResetHandler")
   auditAsAdmin        AdminAuditLog[]        @relation("AuditAdmin")
@@ -107,7 +138,7 @@ model AuthIdentity {
 
 model PasswordResetRequest {
   id             String      @id @default(cuid())
-  nickname       String
+  username       String
   userId         String?
   contact        String
   comment        String?
@@ -115,7 +146,7 @@ model PasswordResetRequest {
   status         ResetStatus @default(new)
   handledById    String?
   handledAt      DateTime?
-  tokenHash      String?
+  tokenHash      String?     @unique
   tokenExpiresAt DateTime?
   tokenUsedAt    DateTime?
   createdAt      DateTime    @default(now())
@@ -148,6 +179,8 @@ model Wishlist {
   title       String
   description String?
   visibility  WishlistVisibility @default(private)
+  sortMode    WishlistSort       @default(manual)
+  sortDir     SortDir            @default(desc)
   shareSlug   String             @unique
   eventDate   DateTime?          @db.Date
   createdAt   DateTime           @default(now())
@@ -168,7 +201,7 @@ model Item {
   price       Decimal? @db.Decimal(12, 2)
   currency    String?  @default("RUB")
   url         String?
-  priority    Int      @default(2)
+  priority    Int      @default(3)
   note        String?
   position    Int      @default(0)
   status      String   @default("active")
@@ -255,10 +288,11 @@ model Group {
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
-  owner       User             @relation(fields: [ownerId], references: [id])
-  members     GroupMember[]
-  exclusions  GroupExclusion[]
-  assignments Assignment[]
+  owner         User             @relation(fields: [ownerId], references: [id])
+  members       GroupMember[]
+  exclusions    GroupExclusion[]
+  assignments   Assignment[]
+  notifications Notification[]
 }
 
 model GroupMember {
@@ -274,6 +308,7 @@ model GroupMember {
   wishlist Wishlist? @relation(fields: [wishlistId], references: [id], onDelete: SetNull)
 
   @@unique([groupId, userId])
+  @@index([userId])
 }
 
 model GroupExclusion {
@@ -303,4 +338,37 @@ model Assignment {
 
   @@unique([groupId, giverId])
   @@unique([groupId, receiverId])
+}
+
+/// Уведомление пользователю. О бронях подарков уведомлений нет намеренно: владелец не должен о них знать.
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  actorId   String?
+  groupId   String?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user  User   @relation("NotificationOwner", fields: [userId], references: [id], onDelete: Cascade)
+  actor User?  @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Cascade)
+  group Group? @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+}
+
+model Session {
+  id        String      @id @default(cuid())
+  userId    String
+  tokenHash String      @unique
+  kind      SessionKind @default(user)
+  expiresAt DateTime
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
