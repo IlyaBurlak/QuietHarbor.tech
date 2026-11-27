@@ -5,6 +5,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
   // Сколько прокси стоит перед сервером (0 — нет, 1 — Caddy). Влияет на IP для лимитов
   TRUST_PROXY: z.coerce.number().int().min(0).default(0),
+  SERVER_HOST: z.string().min(1).optional(),
   SERVER_PORT: z.coerce.number().int().default(3000),
   CLIENT_URL: z.string().url(),
   SESSION_SECRET: z.string().min(32),

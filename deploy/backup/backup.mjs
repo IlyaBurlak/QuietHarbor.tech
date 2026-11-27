@@ -8,7 +8,10 @@ import { backupSchedule } from './schedule.mjs';
 const dumpFile = '/work/database.dump';
 const completeTag = 'quietharbor-complete';
 const pendingTag = 'quietharbor-pending';
-const configFiles = ['/config/.env.production', '/config/.env.backup'];
+const stateDir = process.env.QH_BACKUP_STATE_DIR;
+const configFiles = stateDir
+  ? [`${stateDir}/session-secret`]
+  : ['/config/.env.production', '/config/.env.backup'];
 
 function restic(args) {
   return execFileSync('restic', args, {
