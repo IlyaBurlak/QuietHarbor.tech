@@ -7,6 +7,6 @@
   "bin": { "quietharbor": "bin/quietharbor.mjs" },
   "engines": { "node": ">=20" },
   "scripts": {
-    "test": "node --test test/"
+    "test": "node --test"
   }
 }

@@ -28,6 +28,8 @@ services:
     # Порт наружу не публикуется: к базе ходит только бэкенд внутри сети compose
 
   migrate:
+    image: ${QH_IMAGE_PREFIX:-quietharbor}/migrate:${QH_IMAGE_TAG:-0.2.0}
+    platform: linux/amd64
     build:
       context: .
       dockerfile: deploy/server.Dockerfile
@@ -41,6 +43,8 @@ services:
 
   server:
     logging: *default-logging
+    image: ${QH_IMAGE_PREFIX:-quietharbor}/server:${QH_IMAGE_TAG:-0.2.0}
+    platform: linux/amd64
     build:
       context: .
       dockerfile: deploy/server.Dockerfile
@@ -80,6 +84,8 @@ services:
   # Пароль админа доступен только этому контейнеру, а не работающему серверу.
   create-admin:
     profiles: [tools]
+    image: ${QH_IMAGE_PREFIX:-quietharbor}/server:${QH_IMAGE_TAG:-0.2.0}
+    platform: linux/amd64
     build:
       context: .
       dockerfile: deploy/server.Dockerfile
@@ -99,6 +105,8 @@ services:
 
   caddy:
     logging: *default-logging
+    image: ${QH_IMAGE_PREFIX:-quietharbor}/web:${QH_IMAGE_TAG:-0.2.0}
+    platform: linux/amd64
     build:
       context: .
       dockerfile: deploy/web.Dockerfile
@@ -106,8 +114,8 @@ services:
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS:-http://localhost}
     ports:
-      - '${HTTP_PORT:-80}:80'
-      - '${HTTPS_PORT:-443}:443'
+      - '${PUBLISH_HOST:-0.0.0.0}:${HTTP_PORT:-80}:80'
+      - '${PUBLISH_HOST:-0.0.0.0}:${HTTPS_PORT:-443}:443'
     volumes:
       # Тот же том, что у бэкенда, но только для чтения: фото отдаёт Caddy
       - uploads:/data/uploads:ro
@@ -116,6 +124,40 @@ services:
     depends_on:
       server:
         condition: service_healthy
+
+  backup:
+    profiles: [backup]
+    logging: *default-logging
+    image: ${QH_IMAGE_PREFIX:-quietharbor}/backup:${QH_IMAGE_TAG:-0.2.0}
+    build:
+      context: .
+      dockerfile: deploy/backup.Dockerfile
+    init: true
+    restart: unless-stopped
+    environment:
+      PGHOST: db
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+      PGCONNECT_TIMEOUT: 10
+      BACKUP_SCHEDULE: ${BACKUP_SCHEDULE:-03:00}
+      BACKUP_TIME_ZONE: ${BACKUP_TIME_ZONE:-Europe/Moscow}
+      RESTIC_REPOSITORY: /backup/repository
+      RESTIC_PASSWORD_FILE: /config/.env.backup-key
+    volumes:
+      - uploads:/data/uploads:ro
+      - type: bind
+        source: ${BACKUP_CONFIG_DIR:-.}
+        target: /config
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${BACKUP_DIRECTORY:-./backups}
+        target: /backup
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
 
 volumes:
   pgdata:

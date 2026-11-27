@@ -1,0 +1,67 @@
+name: Publish release images
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: migrate
+            dockerfile: deploy/server.Dockerfile
+            target: migrate
+            platforms: linux/amd64
+          - image: server
+            dockerfile: deploy/server.Dockerfile
+            target: runtime
+            platforms: linux/amd64
+          - image: web
+            dockerfile: deploy/web.Dockerfile
+            platforms: linux/amd64
+          - image: backup
+            dockerfile: deploy/backup.Dockerfile
+            platforms: linux/amd64,linux/arm64
+          - image: installer
+            dockerfile: deploy/installer.Dockerfile
+            platforms: linux/amd64,linux/arm64
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
+        if: contains(matrix.platforms, 'arm64')
+        with:
+          platforms: arm64
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Sign in to GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+      - name: Build and publish
+        env:
+          IMAGE: ${{ matrix.image }}
+          DOCKERFILE: ${{ matrix.dockerfile }}
+          TARGET: ${{ matrix.target }}
+          PLATFORMS: ${{ matrix.platforms }}
+        run: |
+          version=${GITHUB_REF_NAME#v}
+          image_prefix="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/quietharbor"
+          args=()
+          if [[ -n "$TARGET" ]]; then
+            args+=(--target "$TARGET")
+          fi
+          if [[ "$IMAGE" == installer ]]; then
+            args+=(--build-arg "QH_IMAGE_PREFIX=$image_prefix" --build-arg "QH_IMAGE_TAG=$version")
+          fi
+          docker buildx build --push \
+            --file "$DOCKERFILE" --platform "$PLATFORMS" \
+            --tag "$image_prefix/$IMAGE:$version" \
+            --label "org.opencontainers.image.source=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" \
+            --label "org.opencontainers.image.version=$version" \
+            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+            "${args[@]}" .

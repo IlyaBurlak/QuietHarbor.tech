@@ -1,6 +1,7 @@
 // Маленькая библиотека консольного интерфейса без зависимостей:
 // цвета, рамки, меню со стрелками, ввод с проверкой, скрытый ввод пароля, спиннер, таблицы.
 import readline from 'node:readline';
+import { on } from 'node:events';
 
 const useColor = () => process.stdout.isTTY && !process.env.NO_COLOR;
 const wrap = (open, close) => (s) => (useColor() ? `\x1b[${open}m${s}\x1b[${close}m` : String(s));
@@ -97,15 +98,16 @@ export function spinner(text) {
 
 // ---- ввод ----
 
-/** Один ключ из stdin в нормализованном виде. */
-function nextKey(stdin) {
-  return new Promise((resolve) => {
-    const onKey = (str, key) => {
-      stdin.off('keypress', onKey);
-      resolve({ str, key: key ?? {} });
-    };
-    stdin.on('keypress', onKey);
-  });
+/** Сохраняет все клавиши одной вставки в буфере до следующего чтения. */
+function readKeys(stdin) {
+  const keys = on(stdin, 'keypress');
+  return {
+    async next() {
+      const { value: [str, key] } = await keys.next();
+      return { str, key: key ?? {} };
+    },
+    close: () => keys.return(),
+  };
 }
 
 function rawStart(stdin) {
@@ -144,11 +146,12 @@ export async function select({ message, choices, initial = 0, stdin = process.st
     drawn = lines.length;
   };
 
+  const keys = readKeys(stdin);
   rawStart(stdin);
   try {
     for (;;) {
       render();
-      const { str, key } = await nextKey(stdin);
+      const { str, key } = await keys.next();
       if (isCtrlC(key)) throw new Cancelled();
       if (key.name === 'up' || str === 'k') cursor = enabled[(enabled.indexOf(cursor) - 1 + enabled.length) % enabled.length];
       else if (key.name === 'down' || str === 'j') cursor = enabled[(enabled.indexOf(cursor) + 1) % enabled.length];
@@ -164,6 +167,7 @@ export async function select({ message, choices, initial = 0, stdin = process.st
       }
     }
   } finally {
+    keys.close();
     rawStop(stdin);
   }
 }
@@ -181,6 +185,7 @@ export async function input({
   stdin = process.stdin,
   out = process.stdout,
 }) {
+  const keys = readKeys(stdin);
   rawStart(stdin);
   try {
     for (;;) {
@@ -192,7 +197,7 @@ export async function input({
       draw();
       let submitted = false;
       while (!submitted) {
-        const { str, key } = await nextKey(stdin);
+        const { str, key } = await keys.next();
         if (isCtrlC(key)) {
           out.write('\n');
           throw new Cancelled();
@@ -215,16 +220,18 @@ export async function input({
       return final;
     }
   } finally {
+    keys.close();
     rawStop(stdin);
   }
 }
 
 export async function confirm({ message, default: def = false, stdin = process.stdin, out = process.stdout }) {
+  const keys = readKeys(stdin);
   rawStart(stdin);
   try {
     out.write(`${c.cyan('?')} ${c.bold(message)} ${c.gray(def ? '(Д/н)' : '(д/Н)')} › `);
     for (;;) {
-      const { str, key } = await nextKey(stdin);
+      const { str, key } = await keys.next();
       if (isCtrlC(key)) {
         out.write('\n');
         throw new Cancelled();
@@ -238,17 +245,19 @@ export async function confirm({ message, default: def = false, stdin = process.s
       return answer;
     }
   } finally {
+    keys.close();
     rawStop(stdin);
   }
 }
 
 /** Ждёт Enter (после вывода результата, чтобы меню не затёрло его). */
 export async function pause(text = 'Нажмите Enter, чтобы вернуться в меню…', stdin = process.stdin, out = process.stdout) {
+  const keys = readKeys(stdin);
   rawStart(stdin);
   try {
     out.write(c.gray(text));
     for (;;) {
-      const { key } = await nextKey(stdin);
+      const { key } = await keys.next();
       if (isCtrlC(key)) {
         out.write('\n');
         throw new Cancelled();
@@ -259,6 +268,7 @@ export async function pause(text = 'Нажмите Enter, чтобы верну�
       }
     }
   } finally {
+    keys.close();
     rawStop(stdin);
   }
 }
